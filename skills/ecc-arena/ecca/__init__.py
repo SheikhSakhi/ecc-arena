@@ -22,7 +22,7 @@ DEFAULT_WAVE = 10
 
 PHASES = ("compete", "audit", "verdict", "surgery", "verify", "deliver")
 
-PACKAGE_REQUIRED = ("MATRIX.md", "PRD.md", "ARCHITECTURE.md", "POLICIES.md", "TASKS.md", "DECISIONS.md")
+PACKAGE_REQUIRED = ("MATRIX.md", "PRD.md", "ARCHITECTURE.md", "POLICIES.md", "TASKS.md", "notes/COMPLETIONS.md")
 PACKAGE_FILES = PACKAGE_REQUIRED + ("TESTS.md", "OPS.md", "CLAUDE.md", "README.md")
 
 # Any of these in a final package is an unmade decision. The engine turns each hit into a MAJOR gap,

@@ -72,8 +72,8 @@ many of N filled it). The winner's empty cells split into two lists:
 
 - **filled by someone else**: a transplant from a donor whose cell passed its probe and fits the
   winner's design; and
-- **empty everywhere**: an open gap the surgeon must decide, with the reasoning recorded in
-  `DECISIONS.md`.
+- **empty everywhere**: an open gap the surgeon must complete itself, with the reasoning recorded
+  in `notes/COMPLETIONS.md`.
 
 That is the only reason a part moves from one project to another. Nothing is transplanted because
 it is "better". Something is transplanted because it is missing.
@@ -83,7 +83,8 @@ it is "better". Something is transplanted because it is missing.
 A cell is never deferred. There is no `DECISION NEEDED`, no `TBD`, no `EMPTY`, no "the user will
 decide". A person cannot compute a per-member spend limit, a quorum or a retention period better
 than a model that has the whole package in front of it; what a person can do is disagree with a
-specific decision and change it. So every decision the task did not make is made in the package,
-with its value, its reasoning and arithmetic, the alternatives rejected and the place to change it,
-all in `DECISIONS.md`. The engine scans the final package for deferral markers and fails
+specific decision and change it. So everything the task did not say is completed in the package:
+the value lives in the project files like any other rule, and `notes/COMPLETIONS.md` records what
+was completed, the reasoning and arithmetic, the alternatives rejected and the place to change it.
+It is a note in the margin, not a project document. The engine scans the final package for deferral markers and fails
 verification on every hit.

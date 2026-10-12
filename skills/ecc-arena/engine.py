@@ -167,7 +167,7 @@ def cmd_winner(args):
         for h in summary.get("markers", []):
             print("  unmade decision left in %s:%d: %s" % (h["file"], h["line"], h["text"]))
     if v:
-        print("decisions made for the user, with reasoning: %s" % os.path.join(st.final_dir(d, v), "DECISIONS.md"))
+        print("what the winner lacked and how it was completed: %s" % os.path.join(st.final_dir(d, v), "notes", "COMPLETIONS.md"))
     if st.has_output(st.business_plan_out(d)):
         print("deliverables: %s" % st.deliverable_dir(d))
         print("  project: %s" % os.path.join(st.deliverable_dir(d), "project"))

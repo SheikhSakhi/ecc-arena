@@ -4,11 +4,11 @@ description: >-
   Make N versions of a whole project compete, find what the winner is missing, and fill it from the
   others. Every competitor is an Everything-Claude-Code (ECC) agent chain with its own skills,
   reasoning mode and strategy; each builds a complete, build-ready project package (completeness
-  matrix, PRD, architecture, policies, tasks, tests, ops, decisions, CLAUDE.md). Judges build the union of
+  matrix, PRD, architecture, policies, tasks, tests, ops, CLAUDE.md, plus a margin note of what was completed). Judges build the union of
   every competitor's completeness matrix, probe every package with scenarios, and score it. A chief
   judge picks the winner and, for every matrix cell the winner leaves empty, orders a transplant
   from a package that filled it or declares an open gap. A surgeon assembles one package and
-  decides every open gap itself with reasoning (nothing is left for the user to decide), a
+  completes every open gap itself with reasoning (nothing is left for the user to decide), a
   verifier re-audits it, and a deliverer produces the project folder to continue in Claude Code
   plus a business plan and a pitch deck. Use when the user says "ecc arena", wants a project
   designed from every angle, or complains that a plan or an arena left gaps.
@@ -116,8 +116,9 @@ Every phase works the same way:
 The order `next` takes you through:
 
 - **compete**: every competitor builds its completeness matrix from the task and writes a full
-  project package: MATRIX.md, PRD.md, ARCHITECTURE.md, POLICIES.md, TASKS.md, DECISIONS.md,
-  TESTS.md, OPS.md, CLAUDE.md, README.md. Every cell decided; nothing deferred.
+  project package: MATRIX.md, PRD.md, ARCHITECTURE.md, POLICIES.md, TASKS.md, TESTS.md, OPS.md,
+  CLAUDE.md, README.md, and notes/COMPLETIONS.md recording what the task did not say and the
+  competitor completed. Every cell filled; nothing deferred.
 - **audit**: one judge per group of ten builds the union matrix of its group, lists every package's
   empty cells as gaps with evidence, probes every package with scenarios, and scores the five
   criteria.
@@ -125,7 +126,7 @@ The order `next` takes you through:
   every cell empty in the winner orders a transplant from a package that filled it or declares an
   open gap.
 - **surgery**: the surgeon assembles the final package and a log of every transplant and every gap
-  decided, with the reasoning in DECISIONS.md. No decision is handed to the user.
+  completed, with the reasoning in notes/COMPLETIONS.md. Nothing is handed to the user.
 - **verify**: the verifier rebuilds the matrix from the task, checks every claimed cell at the place
   the package names, probes, and scores. The engine also scans the package for deferral markers
   (DECISION NEEDED, TBD, EMPTY, TODO, "to be decided") and adds a MAJOR gap per hit. If it fails and
@@ -152,9 +153,10 @@ and the deliverable README; those are the only run files you read. Give the user
 2. **The business plan and the pitch deck**: their paths.
 3. **How it was assembled**: the winner's card in one line, then each transplant as "cell: wallet x
    spend / per-member limit, from A007" in a short list, from the surgery log.
-4. **What was decided for you**: the gaps the surgeon closed, and the path to DECISIONS.md, where
-   every decision has its value, reasoning and the place to change it. The user changes what they
-   disagree with; nothing is waiting on them.
+4. **What was completed for you**: the path to notes/COMPLETIONS.md, which records what the winner
+   lacked, what was taken from other packages and what was written at assembly, each with its
+   reasoning and the place to change it. The project files themselves carry the values like any
+   other rule. The user changes what they disagree with; nothing is waiting on them.
 5. **What is still open**: the verifier's remaining gaps, undefined probes, contradictions and any
    unmade decision the engine found, honestly, if it did not pass.
 6. Where the full record lives: the run folder.

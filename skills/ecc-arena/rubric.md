@@ -42,10 +42,10 @@ winner. Every transplant is logged with the union cell, the donor, the file and 
 
 ## Open gaps
 
-A union cell empty in every package, or a probe nobody defines, is an open gap. The surgeon decides
-it: a concrete value or rule, with the reasoning, the alternatives and the place to change it in
-`DECISIONS.md`. Nothing is handed to the user as a question. Decided gaps are listed in the report so
-the user can change what they disagree with.
+A union cell empty in every package, or a probe nobody defines, is an open gap. The surgeon completes
+it: a concrete value or rule in the project files, with the reasoning, the alternatives and the
+place to change it recorded in `notes/COMPLETIONS.md`. Nothing is handed to the user as a question.
+Completed gaps are listed in the report so the user can change what they disagree with.
 
 ## Verification
 

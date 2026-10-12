@@ -136,6 +136,7 @@ class FlowTests(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertIn("winner: A002", out)
         self.assertIn("transplant U1 from A001", out)
+        self.assertIn("notes/COMPLETIONS.md", out)
         self.assertIn("pitch deck", out)
 
     def test_a_deferred_decision_in_the_final_package_fails_verification(self):

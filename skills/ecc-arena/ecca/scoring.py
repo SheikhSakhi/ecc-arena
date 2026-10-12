@@ -185,7 +185,7 @@ def marker_gaps(hits):
     """The synthetic MAJOR gaps the engine adds for unmade decisions. The surgeon must decide, not defer."""
     return [{"union_id": None, "row": "%s:%d" % (h["file"], h["line"]), "question": "unmade decision",
              "severity": "MAJOR", "what": "left for the user instead of decided: %s" % h["text"],
-             "fix": "decide it: write the value, the reasoning and how to change it in DECISIONS.md, and put the value in place"}
+             "fix": "complete it: put the value in the project file like any other rule, and record what was completed and why in notes/COMPLETIONS.md"}
             for h in hits]
 
 
