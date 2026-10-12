@@ -138,6 +138,26 @@ class FlowTests(unittest.TestCase):
         self.assertIn("transplant U1 from A001", out)
         self.assertIn("pitch deck", out)
 
+    def test_a_deferred_decision_in_the_final_package_fails_verification(self):
+        self.finish_packages()
+        self.finish_audits({"A001": 6, "A002": 9, "A003": 7, "A004": 5})
+        write_json(st.verdict_out(self.d), {"winner": "A002", "reason": "", "transplants": [], "open_gaps": []})
+        self.finish_final(1)
+        write(os.path.join(st.final_dir(self.d, 1), "POLICIES.md"),
+              "# Policies\n\nDaily spend limit per member: [DECISION NEEDED: how much?]\nQuorum: tbd\n")
+        write_json(st.verify_out(self.d, 1), {"scores": scores(9), "summary": "the judge says fine"})
+        phase, jobs, _, note = next_action(self.state)
+        self.assertEqual((phase, jobs[0]["version"]), ("surgery", 2))
+        self.assertIn("2 unmade decisions", note)
+        write_prompts(self.state, "surgery")
+        code, out = engine(self.cwd, "status")
+        self.assertIn("FAIL", out)
+        self.finish_final(2)
+        write_json(st.verify_out(self.d, 2), {"scores": scores(9)})
+        phase, _, _, note = next_action(self.state)
+        self.assertEqual(phase, "deliver")
+        self.assertIn("v2 passed", note)
+
     def test_last_allowed_pass_falls_through_to_deliver_with_open_gaps(self):
         self.finish_packages()
         self.finish_audits({"A001": 6, "A002": 9, "A003": 7, "A004": 5})

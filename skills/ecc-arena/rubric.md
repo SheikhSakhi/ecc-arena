@@ -42,15 +42,19 @@ winner. Every transplant is logged with the union cell, the donor, the file and 
 
 ## Open gaps
 
-A union cell empty in every package, or a probe nobody defines, is an open gap. The surgeon fills it
-with a concrete default where a reasonable default exists, and marks `DECISION NEEDED: <question>`
-where only the user can decide. Open gaps are reported to the user; they are never dropped.
+A union cell empty in every package, or a probe nobody defines, is an open gap. The surgeon decides
+it: a concrete value or rule, with the reasoning, the alternatives and the place to change it in
+`DECISIONS.md`. Nothing is handed to the user as a question. Decided gaps are listed in the report so
+the user can change what they disagree with.
 
 ## Verification
 
 The final package passes when every criterion scores at least the threshold (7), no gap is FATAL or
-MAJOR, there is no contradiction between files, and no probe is undefined. Otherwise the surgeon gets
-the list and one more pass. After the last allowed pass, what remains goes to the user in the report.
+MAJOR, there is no contradiction between files, no probe is undefined, and the engine's own scan
+finds no deferral marker (`DECISION NEEDED`, `TBD`, `EMPTY`, `TODO`, "to be decided", "open
+question", "user decides") in any package file. Each marker the engine finds is a MAJOR gap added to
+the verifier's list. Otherwise the surgeon gets the list and one more pass. After the last allowed
+pass, what remains goes to the user in the report.
 
 ## What the judge does not reward
 

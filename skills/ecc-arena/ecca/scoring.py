@@ -1,8 +1,9 @@
 """Reads what the judges wrote, checks it, and does the arithmetic. Judges never compute totals."""
 import json
 import os
+import re
 
-from . import ArenaError, SKILL_DIR
+from . import ArenaError, SKILL_DIR, FORBIDDEN_MARKERS, PACKAGE_FILES
 
 CRITERIA_PATH = os.path.join(SKILL_DIR, "criteria.json")
 SEVERITIES = ("FATAL", "MAJOR", "MINOR")
@@ -163,6 +164,31 @@ def validate_verify(doc, criteria):
             "summary": doc.get("summary", "")}
 
 
+def scan_markers(package_dir, markers=FORBIDDEN_MARKERS, files=PACKAGE_FILES):
+    """Every unmade decision left in a package: [{file, line, marker, text}]."""
+    hits = []
+    patterns = [(m, re.compile(m, re.I)) for m in markers]
+    for name in files:
+        path = os.path.join(package_dir, name)
+        if not os.path.isfile(path):
+            continue
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            for lineno, line in enumerate(fh, start=1):
+                for raw, pat in patterns:
+                    if pat.search(line):
+                        hits.append({"file": name, "line": lineno, "marker": raw, "text": line.strip()[:160]})
+                        break
+    return hits
+
+
+def marker_gaps(hits):
+    """The synthetic MAJOR gaps the engine adds for unmade decisions. The surgeon must decide, not defer."""
+    return [{"union_id": None, "row": "%s:%d" % (h["file"], h["line"]), "question": "unmade decision",
+             "severity": "MAJOR", "what": "left for the user instead of decided: %s" % h["text"],
+             "fix": "decide it: write the value, the reasoning and how to change it in DECISIONS.md, and put the value in place"}
+            for h in hits]
+
+
 def fail_reason(result):
     parts = []
     if result["fatal"]:
@@ -176,4 +202,6 @@ def fail_reason(result):
         parts.append("%d undefined probes" % len(result["undefined"]))
     if result["contradictions"]:
         parts.append("%d contradictions" % len(result["contradictions"]))
+    if result.get("markers"):
+        parts.append("%d unmade decisions left in the package" % len(result["markers"]))
     return "; ".join(parts) or "did not pass"

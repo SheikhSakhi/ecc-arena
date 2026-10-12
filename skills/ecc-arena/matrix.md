@@ -72,7 +72,18 @@ many of N filled it). The winner's empty cells split into two lists:
 
 - **filled by someone else**: a transplant from a donor whose cell passed its probe and fits the
   winner's design; and
-- **empty everywhere**: an open gap the surgeon must fill, or mark `DECISION NEEDED` for the user.
+- **empty everywhere**: an open gap the surgeon must decide, with the reasoning recorded in
+  `DECISIONS.md`.
 
 That is the only reason a part moves from one project to another. Nothing is transplanted because
 it is "better". Something is transplanted because it is missing.
+
+## Nothing is left to the user
+
+A cell is never deferred. There is no `DECISION NEEDED`, no `TBD`, no `EMPTY`, no "the user will
+decide". A person cannot compute a per-member spend limit, a quorum or a retention period better
+than a model that has the whole package in front of it; what a person can do is disagree with a
+specific decision and change it. So every decision the task did not make is made in the package,
+with its value, its reasoning and arithmetic, the alternatives rejected and the place to change it,
+all in `DECISIONS.md`. The engine scans the final package for deferral markers and fails
+verification on every hit.

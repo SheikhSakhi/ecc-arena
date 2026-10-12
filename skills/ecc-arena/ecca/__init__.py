@@ -22,8 +22,15 @@ DEFAULT_WAVE = 10
 
 PHASES = ("compete", "audit", "verdict", "surgery", "verify", "deliver")
 
-PACKAGE_REQUIRED = ("MATRIX.md", "PRD.md", "ARCHITECTURE.md", "POLICIES.md", "TASKS.md")
+PACKAGE_REQUIRED = ("MATRIX.md", "PRD.md", "ARCHITECTURE.md", "POLICIES.md", "TASKS.md", "DECISIONS.md")
 PACKAGE_FILES = PACKAGE_REQUIRED + ("TESTS.md", "OPS.md", "CLAUDE.md", "README.md")
+
+# Any of these in a final package is an unmade decision. The engine turns each hit into a MAJOR gap,
+# so verification cannot pass while one remains. (regex, case-insensitive)
+FORBIDDEN_MARKERS = (
+    r"DECISION\s+NEEDED", r"\bTBD\b", r"\bTO\s+BE\s+(DECIDED|DETERMINED|DEFINED)\b", r"CONFIGURABLE\s+LATER",
+    r"\bTODO\b", r"\|\s*EMPTY\s*\|", r"\bOPEN\s+QUESTION\b", r"\bUSER\s+(TO\s+)?DECIDE",
+)
 
 
 class ArenaError(Exception):

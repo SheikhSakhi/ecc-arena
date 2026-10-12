@@ -3,7 +3,8 @@ import os
 
 from . import ArenaError, PHASES
 from . import state as st
-from .scoring import load_criteria, validate_audit, validate_verdict, validate_verify, fail_reason
+from .scoring import (load_criteria, validate_audit, validate_verdict, validate_verify, fail_reason, scan_markers,
+                      marker_gaps)
 
 
 def _job(jid, kind, outputs, **extra):
@@ -80,7 +81,7 @@ def _after_verdict(state):
     if verify_doc is None:
         jobs = phase_jobs(state, "verify")
         return "verify", jobs, jobs, "verifying final package v%d" % v
-    result = validate_verify(verify_doc, criteria)
+    result = verified(state, v, verify_doc, criteria)
     if not result["pass"] and v < state["max_surgery"]:
         jobs = phase_jobs(state, "surgery")
         return "surgery", jobs, jobs, "v%d failed verification (%s); pass %d of %d" % (v, fail_reason(result), v + 1, state["max_surgery"])
@@ -91,6 +92,19 @@ def _after_verdict(state):
     return "done", [], [], note + "; deliverables written"
 
 
+def verified(state, v, verify_doc, criteria):
+    """The verifier's result plus the engine's own check: every unmade decision left in the final
+    package (DECISION NEEDED, TBD, EMPTY cells ...) is a MAJOR gap, so the package cannot pass with one."""
+    result = validate_verify(verify_doc, criteria)
+    hits = scan_markers(st.final_dir(state["dir"], v))
+    if hits:
+        result = dict(result, gaps=result["gaps"] + marker_gaps(hits), markers=hits)
+        result["pass"] = False
+    else:
+        result = dict(result, markers=[])
+    return result
+
+
 def verify_summary(state):
     """The latest verification result with its version, or None."""
     v = st.latest_final_version(state["dir"])
@@ -98,4 +112,4 @@ def verify_summary(state):
     if doc is None:
         return None
     criteria = load_criteria(os.path.join(state["dir"], "criteria.json"))
-    return dict(validate_verify(doc, criteria), version=v)
+    return dict(verified(state, v, doc, criteria), version=v)

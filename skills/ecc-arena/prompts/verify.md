@@ -8,10 +8,10 @@ Read first, in this order:
 1. The matrix method: {{matrix_doc}}
 2. The lenses: {{lenses_doc}}
 3. The rubric: {{rubric}}
-4. The final package: {{final_dir}} (MATRIX.md, PRD.md, ARCHITECTURE.md, POLICIES.md, TASKS.md, TESTS.md, OPS.md, CLAUDE.md, README.md)
+4. The final package: {{final_dir}} (MATRIX.md, PRD.md, ARCHITECTURE.md, POLICIES.md, TASKS.md, DECISIONS.md, TESTS.md, OPS.md, CLAUDE.md, README.md)
 
 How to verify:
-1. Build your own matrix from the task, from scratch, without looking at the package's MATRIX.md: entities, actions, rows, and the questions the lenses generate for each row. Then compare with the package's MATRIX.md. Every row or question you have that the package does not is a gap. Every cell marked EMPTY without DECISION NEEDED is a gap.
+1. Build your own matrix from the task, from scratch, without looking at the package's MATRIX.md: entities, actions, rows, and the questions the lenses generate for each row. Then compare with the package's MATRIX.md. Every row or question you have that the package does not is a gap. Every cell that defers instead of deciding (EMPTY, TBD, DECISION NEEDED, "to be decided", "user decides", "configurable later", a question left open) is a MAJOR gap: the package must decide everything, and the user changes what they disagree with afterwards. Then open DECISIONS.md: every number and rule in POLICIES.md the task did not dictate must have an entry there with reasoning that holds; a value with no entry, or an entry whose arithmetic or comparable does not hold, is a gap.
 2. For every cell the package claims is filled, open the file and section its "where" column names and confirm the concrete answer is there. A claimed cell with no answer at the named place is a gap.
 3. Probe. For every row, trace the scenarios that must be blocked, allowed or defined (non-member acts; limit exceeded by one; done twice; two at once; actor leaves mid-way; dependency down) through POLICIES.md and ARCHITECTURE.md, and record BLOCKED, ALLOWED or UNDEFINED with the place you looked.
 4. Check every requirement in the task against PRD.md. A requirement with no feature is a gap, usually MAJOR. A feature the task never asked for is a task-fit problem.

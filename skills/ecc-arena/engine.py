@@ -164,6 +164,10 @@ def cmd_winner(args):
             print("  undefined probe: %s (%s)" % (p["scenario"], p["where"]))
         for c in summary["contradictions"]:
             print("  contradiction: %s" % c)
+        for h in summary.get("markers", []):
+            print("  unmade decision left in %s:%d: %s" % (h["file"], h["line"], h["text"]))
+    if v:
+        print("decisions made for the user, with reasoning: %s" % os.path.join(st.final_dir(d, v), "DECISIONS.md"))
     if st.has_output(st.business_plan_out(d)):
         print("deliverables: %s" % st.deliverable_dir(d))
         print("  project: %s" % os.path.join(st.deliverable_dir(d), "project"))

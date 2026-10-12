@@ -4,10 +4,11 @@ description: >-
   Make N versions of a whole project compete, find what the winner is missing, and fill it from the
   others. Every competitor is an Everything-Claude-Code (ECC) agent chain with its own skills,
   reasoning mode and strategy; each builds a complete, build-ready project package (completeness
-  matrix, PRD, architecture, policies, tasks, tests, ops, CLAUDE.md). Judges build the union of
+  matrix, PRD, architecture, policies, tasks, tests, ops, decisions, CLAUDE.md). Judges build the union of
   every competitor's completeness matrix, probe every package with scenarios, and score it. A chief
   judge picks the winner and, for every matrix cell the winner leaves empty, orders a transplant
-  from a package that filled it or declares an open gap. A surgeon assembles one package, a
+  from a package that filled it or declares an open gap. A surgeon assembles one package and
+  decides every open gap itself with reasoning (nothing is left for the user to decide), a
   verifier re-audits it, and a deliverer produces the project folder to continue in Claude Code
   plus a business plan and a pitch deck. Use when the user says "ecc arena", wants a project
   designed from every angle, or complains that a plan or an arena left gaps.
@@ -107,7 +108,7 @@ Every phase works the same way:
    Wait until every agent in the wave has replied before launching the next wave.
 3. After the last wave, run `ENGINE next` again. If an output is missing or a judge's JSON is broken,
    it says which, and `next` lists only the missing jobs. Re-run those once. If a competitor fails
-   twice, write the single line `NO OUTPUT` into each of its five required files (`ENGINE check
+   twice, write the single line `NO OUTPUT` into each of its six required files (`ENGINE check
    compete` lists the paths) and move on: the auditors score it as empty and fatal. A judge, surgeon,
    verifier or deliverer that fails twice gets a third, fresh run. Never judge, merge, verify or
    deliver anything yourself.
@@ -115,8 +116,8 @@ Every phase works the same way:
 The order `next` takes you through:
 
 - **compete**: every competitor builds its completeness matrix from the task and writes a full
-  project package: MATRIX.md, PRD.md, ARCHITECTURE.md, POLICIES.md, TASKS.md, TESTS.md, OPS.md,
-  CLAUDE.md, README.md.
+  project package: MATRIX.md, PRD.md, ARCHITECTURE.md, POLICIES.md, TASKS.md, DECISIONS.md,
+  TESTS.md, OPS.md, CLAUDE.md, README.md. Every cell decided; nothing deferred.
 - **audit**: one judge per group of ten builds the union matrix of its group, lists every package's
   empty cells as gaps with evidence, probes every package with scenarios, and scores the five
   criteria.
@@ -124,10 +125,11 @@ The order `next` takes you through:
   every cell empty in the winner orders a transplant from a package that filled it or declares an
   open gap.
 - **surgery**: the surgeon assembles the final package and a log of every transplant and every gap
-  filled or marked `DECISION NEEDED`.
+  decided, with the reasoning in DECISIONS.md. No decision is handed to the user.
 - **verify**: the verifier rebuilds the matrix from the task, checks every claimed cell at the place
-  the package names, probes, and scores. If it fails and passes remain, `next` sends the surgeon
-  back in with the verifier's list. Two passes by default.
+  the package names, probes, and scores. The engine also scans the package for deferral markers
+  (DECISION NEEDED, TBD, EMPTY, TODO, "to be decided") and adds a MAJOR gap per hit. If it fails and
+  passes remain, `next` sends the surgeon back in with the list. Two passes by default.
 - **deliver**: the deliverer writes the project folder to continue in Claude Code, the business plan
   and the pitch deck.
 - `next` prints DONE: go to step 5.
@@ -150,10 +152,11 @@ and the deliverable README; those are the only run files you read. Give the user
 2. **The business plan and the pitch deck**: their paths.
 3. **How it was assembled**: the winner's card in one line, then each transplant as "cell: wallet x
    spend / per-member limit, from A007" in a short list, from the surgery log.
-4. **What was filled and what you must decide**: the gaps the surgeon closed, and every
-   `DECISION NEEDED` item.
-5. **What is still open**: the verifier's remaining gaps, undefined probes and contradictions,
-   honestly, if it did not pass.
+4. **What was decided for you**: the gaps the surgeon closed, and the path to DECISIONS.md, where
+   every decision has its value, reasoning and the place to change it. The user changes what they
+   disagree with; nothing is waiting on them.
+5. **What is still open**: the verifier's remaining gaps, undefined probes, contradictions and any
+   unmade decision the engine found, honestly, if it did not pass.
 6. Where the full record lives: the run folder.
 
 The deliverable is a folder outside the user's project. Do not copy it anywhere unless asked.
