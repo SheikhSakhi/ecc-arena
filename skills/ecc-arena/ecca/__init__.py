@@ -1,4 +1,4 @@
-"""Engine for the everything-claude-code-arena skill.
+"""Engine for the ecc-arena skill.
 
 The orchestrator (Claude) never judges and never builds. It runs `engine.py next`, launches the
 sub-agent jobs it is told to, and repeats. Every module here is pure bookkeeping over the run folder.

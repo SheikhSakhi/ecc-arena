@@ -1,4 +1,4 @@
-# everything-claude-code-arena
+# ecc-arena
 
 A [Claude Code](https://claude.com/claude-code) skill that makes many versions of a whole **project** compete, then assembles the best body from all of them.
 
@@ -27,13 +27,13 @@ Claude orchestrates. It never competes, judges, merges or builds.
 
 **Easiest:** paste this into Claude Code:
 
-> Install this: https://github.com/SheikhSakhi/everything-claude-code-arena — clone it and run install.sh
+> Install this: https://github.com/SheikhSakhi/ecc-arena — clone it and run install.sh
 
 **Manual:**
 
 ```bash
-git clone https://github.com/SheikhSakhi/everything-claude-code-arena.git
-cd everything-claude-code-arena && sh install.sh
+git clone https://github.com/SheikhSakhi/ecc-arena.git
+cd ecc-arena && sh install.sh
 ```
 
 Requirements: python3 (3.9 or newer), git. The ECC agents are optional: with [everything-claude-code](https://github.com/affaan-m/everything-claude-code) installed in `~/.claude/agents`, each competitor reads its chain's agent definitions and works in those roles; without them it works from the chain's description.
@@ -43,9 +43,9 @@ Restart Claude Code after installing.
 ## Use
 
 ```
-/everything-claude-code-arena a community bucket-list app with a shared wallet, spend limits and voting on what to do next
-/everything-claude-code-arena --quick <task>
-/everything-claude-code-arena --full --build --builders 3 <task>
+/ecc-arena a community bucket-list app with a shared wallet, spend limits and voting on what to do next
+/ecc-arena --quick <task>
+/ecc-arena --full --build --builders 3 <task>
 ```
 
 | flag | meaning |
@@ -66,7 +66,7 @@ Everything a run writes lives in `.ecc-arena/<run>/` in the directory you ran it
 ## Layout
 
 ```
-skills/everything-claude-code-arena/
+skills/ecc-arena/
   SKILL.md         what Claude does as the orchestrator
   engine.py        the command line: plan, init, next, prompts, check, status, winner, card
   ecca/            state, dealing, jobs, prompts, scoring, plan
@@ -75,7 +75,7 @@ skills/everything-claude-code-arena/
   lenses.md        the A-to-Z audit the judges read
   rubric.md        how scores, ranking, transplants and verification work
   prompts/         one brief template per role
-  tests/           unittest suite: python3 -m unittest discover -s skills/everything-claude-code-arena/tests
+  tests/           unittest suite: python3 -m unittest discover -s skills/ecc-arena/tests
 ```
 
 ## License

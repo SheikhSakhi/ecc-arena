@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""everything-claude-code-arena engine. The orchestrator drives a run with these commands:
+"""ecc-arena engine. The orchestrator drives a run with these commands:
 
     python3 engine.py plan [--agents N | --quick | --full] [--build] [--builders B]
     python3 engine.py init --task-file T [--agents N | --quick | --full] [--seed S] [--build] [--builders B]

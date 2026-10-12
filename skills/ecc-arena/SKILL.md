@@ -1,5 +1,5 @@
 ---
-name: everything-claude-code-arena
+name: ecc-arena
 description: >-
   Make N versions of a whole project compete, then assemble the best body from all of them. Every
   competitor is an Everything-Claude-Code agent chain with its own reasoning mode, strategy and an
@@ -14,7 +14,7 @@ description: >-
 argument-hint: "[--agents N | --quick | --full] [--build [--builders B]] [--seed S] <task>"
 ---
 
-# everything-claude-code-arena
+# ecc-arena
 
 The bracket arena makes a hundred answers fight pairwise and leaves the loser's good ideas on the
 floor. This one is built for projects. Every competitor designs the whole project through a different
