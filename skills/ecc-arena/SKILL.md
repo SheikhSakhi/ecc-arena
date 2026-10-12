@@ -52,7 +52,7 @@ Read the flags out of the request. Everything that is not a flag is the project.
 | `--model M` | One model for every role. Default: per-role models from `deck.json` (Sonnet for competitors, auditors and the deliverer; Opus for the chief judge, surgeon and verifier). |
 
 Run `ENGINE plan` with the same flags. It prints the calls per phase. Tell the user in one line, for
-example "10 competitors, 1 audit group, 16 to 18 sub-agent calls; each competitor call prepares a
+example "10 competitors, 1 audit group, 15 to 17 sub-agent calls; each competitor call prepares a
 whole project package", and start. If this skill fired without the user asking for an arena, ask
 once, offering `--quick` or an ordinary plan, and wait.
 

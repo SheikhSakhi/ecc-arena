@@ -23,7 +23,7 @@ The method is in [`matrix.md`](skills/ecc-arena/matrix.md). Rows come from the t
 
 | run | competitors | audit groups | sub-agent calls | bracket arena, same N |
 |---|---|---|---|---|
-| `--quick` (default) | 10 | 1 | 16 to 18 | 55 |
+| `--quick` (default) | 10 | 1 | 15 to 17 | 55 |
 | `--full` | 100 | 10 | 114 to 116 | 595 |
 
 Each competitor call prepares a whole package, so it is many times the size of a judge call. Competitors, auditors and the deliverer run on Sonnet; the chief judge, surgeon and verifier run on Opus. `--model` overrides all of them. `python3 engine.py plan` prints the numbers before anything is spent.
