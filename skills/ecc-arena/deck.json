@@ -1,31 +1,28 @@
 {
-  "version": 1,
-  "about": "Every competitor is dealt one card: an ECC agent chain (which Everything-Claude-Code agents it works as, in order), a reasoning mode, a strategy, and an emphasis lens it obsesses over. Emphasis and chain are dealt round-robin so that with 12 or more competitors every emphasis is covered at least once. No two competitors get the same card.",
+  "version": 2,
+  "about": "Every competitor is dealt one card: an Everything-Claude-Code chain (the ECC agents it works as and the ECC skills it must apply, in order), a reasoning mode and a strategy. Every competitor builds the whole project package; the card only changes how it thinks and which ECC discipline it brings. No two competitors get the same card.",
   "models": {
-    "blueprint": "sonnet",
+    "compete": "sonnet",
     "audit": "sonnet",
     "verdict": "opus",
     "surgery": "opus",
     "verify": "opus",
-    "build": "sonnet",
-    "build_judge": "opus",
-    "build_surgery": "opus"
+    "deliver": "sonnet"
   },
+  "deliver_skills": ["investor-materials", "market-research", "brand-voice", "frontend-slides"],
   "chains": [
-    {"id": "planner-architect-tdd", "name": "Planner, architect, TDD guide, code reviewer", "agents": ["planner", "architect", "tdd-guide", "code-reviewer"], "how": "Plan the phases first, design the system second, define the tests third, then review the whole as a hostile reviewer would."},
-    {"id": "architect-security", "name": "Architect, security reviewer, database reviewer", "agents": ["architect", "security-reviewer", "database-reviewer"], "how": "Design from the threat model and the data model outward. Every component must say how it fails safely and what it stores."},
-    {"id": "product-first", "name": "GAN planner, marketing agent, a11y architect", "agents": ["gan-planner", "marketing-agent", "a11y-architect"], "how": "Write the product spec as if for a launch: audience, features, sprints, acceptance criteria, how it is sold, who it excludes."},
-    {"id": "ops-first", "name": "Loop operator, performance optimizer, doc updater", "agents": ["loop-operator", "performance-optimizer", "doc-updater"], "how": "Start from day-two operations: deploys, monitoring, cost, runbooks, documentation. Design the product so it can be run by someone who did not build it."},
-    {"id": "spec-miner-tdd", "name": "Spec miner, TDD guide, PR test analyzer", "agents": ["spec-miner", "tdd-guide", "pr-test-analyzer"], "how": "Write the requirements as testable specs with invariants first. Every feature gets its acceptance test before its design."},
-    {"id": "code-architect-explorer", "name": "Code explorer, code architect, refactor cleaner", "agents": ["code-explorer", "code-architect", "refactor-cleaner"], "how": "Map what exists or what the closest existing systems do, then produce an implementation blueprint with concrete files, interfaces and build order, and cut everything not needed."},
-    {"id": "security-silent-failure", "name": "Security reviewer, silent failure hunter, type design analyzer", "agents": ["security-reviewer", "silent-failure-hunter", "type-design-analyzer"], "how": "Assume every input is hostile and every dependency will fail. Design the types so illegal states cannot be represented, and make every failure loud."},
-    {"id": "full-stack-reviewers", "name": "TypeScript reviewer, React reviewer, database reviewer, e2e runner", "agents": ["typescript-reviewer", "react-reviewer", "database-reviewer", "e2e-runner"], "how": "Design the web product through the eyes of the four reviewers who will tear it apart: the frontend, the backend types, the queries and the end-to-end flows."},
-    {"id": "python-backend", "name": "Planner, Python reviewer, FastAPI reviewer, database reviewer", "agents": ["planner", "python-reviewer", "fastapi-reviewer", "database-reviewer"], "how": "Design a Python service: API contracts, schemas, async boundaries and the database behind them, with the review rules of each reviewer applied up front."},
-    {"id": "go-rust-systems", "name": "Architect, Go reviewer, Rust reviewer", "agents": ["architect", "go-reviewer", "rust-reviewer"], "how": "Design as a systems engineer: explicit concurrency, ownership of every resource, explicit error paths, no hidden allocation of trust."},
-    {"id": "mobile-first", "name": "Swift reviewer, Kotlin reviewer, Flutter reviewer, a11y architect", "agents": ["swift-reviewer", "kotlin-reviewer", "flutter-reviewer", "a11y-architect"], "how": "Design for a phone in a pocket first: offline, interrupted, one-handed, notifications, app store rules. The web is the second client."},
-    {"id": "ml-data", "name": "MLE reviewer, RAG pipeline reviewer, database reviewer", "agents": ["mle-reviewer", "rag-pipeline-reviewer", "database-reviewer"], "how": "Treat every decision the product makes as a model with inputs, evaluation and drift. Specify data contracts, evaluation and rollback for each."},
-    {"id": "open-source", "name": "Opensource forker, sanitizer, packager", "agents": ["opensource-forker", "opensource-sanitizer", "opensource-packager"], "how": "Design it as something strangers will run and contribute to: licenses, secrets hygiene, setup in one command, contribution rules, no internal references."},
-    {"id": "harness-evaluator", "name": "Harness optimizer, agent evaluator, GAN evaluator", "agents": ["harness-optimizer", "agent-evaluator", "gan-evaluator"], "how": "Write the evaluation before the product: what will be measured, how pass and fail are decided, and how the system proves it works every release."}
+    {"id": "plan-build-test", "name": "Planner, architect, TDD guide, code reviewer", "agents": ["planner", "architect", "tdd-guide", "code-reviewer"], "skills": ["blueprint", "api-design", "tdd-workflow", "coding-standards"], "how": "Plan the phases first, design the system second, define the tests third, then review the whole package as a hostile reviewer would."},
+    {"id": "security-data", "name": "Architect, security reviewer, database reviewer", "agents": ["architect", "security-reviewer", "database-reviewer"], "skills": ["security-review", "postgres-patterns", "error-handling"], "how": "Design from the threat model and the data model outward. Every component says how it fails safely and what it stores."},
+    {"id": "product-ux", "name": "GAN planner, a11y architect, marketing agent", "agents": ["gan-planner", "a11y-architect", "marketing-agent"], "skills": ["product-lens", "design-system", "accessibility", "frontend-patterns"], "how": "Specify the product as if for launch: audience, flows, acceptance criteria, who it excludes, how it is explained to users."},
+    {"id": "ops-deploy", "name": "Loop operator, performance optimizer, doc updater", "agents": ["loop-operator", "performance-optimizer", "doc-updater"], "skills": ["deployment-patterns", "docker-patterns", "dashboard-builder", "verification-loop"], "how": "Start from day-two operations: deploys, monitoring, cost, runbooks. Design so that someone who did not build it can run it."},
+    {"id": "spec-tests", "name": "Spec miner, TDD guide, PR test analyzer", "agents": ["spec-miner", "tdd-guide", "pr-test-analyzer"], "skills": ["intent-driven-development", "tdd-workflow", "e2e-testing", "eval-harness"], "how": "Write every requirement as a testable spec with invariants first. Every feature gets its acceptance test before its design."},
+    {"id": "explorer-architect", "name": "Code explorer, code architect, refactor cleaner", "agents": ["code-explorer", "code-architect", "refactor-cleaner"], "skills": ["search-first", "architecture-decision-records", "coding-standards"], "how": "Find what already exists and what the closest working systems do, record every decision as an ADR, and cut everything not needed."},
+    {"id": "defensive-types", "name": "Security reviewer, silent failure hunter, type design analyzer", "agents": ["security-reviewer", "silent-failure-hunter", "type-design-analyzer"], "skills": ["error-handling", "security-review", "coding-standards"], "how": "Assume every input is hostile and every dependency will fail. Make illegal states unrepresentable and every failure loud."},
+    {"id": "web-fullstack", "name": "TypeScript reviewer, React reviewer, database reviewer, e2e runner", "agents": ["typescript-reviewer", "react-reviewer", "database-reviewer", "e2e-runner"], "skills": ["react-patterns", "api-design", "postgres-patterns", "e2e-testing"], "how": "Design the web product through the four reviewers who will tear it apart: the frontend, the API types, the queries and the end-to-end flows."},
+    {"id": "python-service", "name": "Planner, Python reviewer, FastAPI reviewer, database reviewer", "agents": ["planner", "python-reviewer", "fastapi-reviewer", "database-reviewer"], "skills": ["python-patterns", "api-design", "postgres-patterns", "python-testing"], "how": "Design a Python service: API contracts, schemas, async boundaries and the database behind them, with each reviewer's rules applied up front."},
+    {"id": "council-decisions", "name": "Architect and planner with a council", "agents": ["architect", "planner"], "skills": ["council", "architecture-decision-records", "blueprint", "agentic-engineering"], "how": "Put every ambiguous decision through a four-voice council before writing it down, and record the disagreement next to the decision."},
+    {"id": "market-first", "name": "Marketing agent, planner, architect", "agents": ["marketing-agent", "planner", "architect"], "skills": ["market-research", "product-lens", "brand-voice", "api-design"], "how": "Start from who pays and why, what the competitors already do, and what the product must say about itself. Then design what that demands."},
+    {"id": "agent-native", "name": "Architect and harness optimizer", "agents": ["architect", "harness-optimizer"], "skills": ["agentic-os", "mcp-server-patterns", "eval-harness", "agent-harness-construction"], "how": "Design the product as something agents will operate and extend: explicit tools, explicit state, evaluation built in."}
   ],
   "reasoning": [
     {"id": "first-principles", "name": "First principles", "how": "Reduce the task to facts nobody can dispute, then rebuild from those. Keep a convention only when it earns its place again."},
@@ -33,7 +30,7 @@
     {"id": "inversion", "name": "Inversion", "how": "List every way to guarantee the project fails, then design the opposite of each item."},
     {"id": "analogy", "name": "Analogy to proven systems", "how": "Find the three closest systems that already work in the world and borrow their hard-won rules, saying which rule came from where."},
     {"id": "adversary", "name": "Adversarial", "how": "Play the fraudster, the lawyer, the angry customer, the tired operator and the bored moderator in turn, and design against each."},
-    {"id": "constraints-first", "name": "Constraints first", "how": "Write every hard constraint (law, money, time, platform, physics) before any feature. Features must fit inside the constraints, never the reverse."},
+    {"id": "constraints-first", "name": "Constraints first", "how": "Write every hard constraint (law, money, time, platform, physics) before any feature. Features fit inside the constraints, never the reverse."},
     {"id": "user-journey", "name": "User journey", "how": "Walk one real person through the product minute by minute from first contact to leaving, and design whatever that walk needs."},
     {"id": "state-machine", "name": "State machines", "how": "Model every important thing as explicit states and transitions, name the illegal transitions, and design around them."},
     {"id": "money-flow", "name": "Follow the money", "how": "Trace every unit of value from where it enters to where it leaves, including fees, refunds, limits, taxes and who is liable at each step."},
@@ -54,19 +51,5 @@
     {"id": "composable", "name": "Composable modules", "how": "Split the system into modules with explicit contracts so any one can be replaced without touching the rest."},
     {"id": "data-driven", "name": "Measure everything that matters", "how": "Every feature ships with its metric, its alert and the decision that metric will drive."},
     {"id": "regulated-grade", "name": "Regulated grade", "how": "Design as if an auditor will read it: audit trails, retention, separation of duties, documented controls."}
-  ],
-  "emphasis": [
-    {"id": "legal", "name": "Legal and compliance", "lenses": ["B"], "how": "Obsess over jurisdiction, licenses, terms, privacy, consumer and financial regulation, and what gets the project shut down."},
-    {"id": "money", "name": "Money, limits and fraud", "lenses": ["C"], "how": "Obsess over every amount: pricing, spend limits, caps, quotas, fees, refunds, reconciliation, fraud and chargebacks. Every limit needs a number."},
-    {"id": "governance", "name": "Rules, voting and disputes", "lenses": ["D"], "how": "Obsess over how decisions are made inside the product: voting mechanics, eligibility, weighting, ties, changing votes, sybil resistance, disputes and appeals."},
-    {"id": "identity", "name": "Identity, roles and permissions", "lenses": ["E"], "how": "Obsess over who can do what, how they prove who they are, how access is revoked, and how every privileged action is logged."},
-    {"id": "data", "name": "Data model and lifecycle", "lenses": ["F"], "how": "Obsess over the data: model, ownership, retention, deletion, export, backups, migrations and personal data."},
-    {"id": "edge-cases", "name": "Core logic and edge cases", "lenses": ["G"], "how": "Obsess over states, transitions, concurrency, time zones, idempotency, limits, empty states and the inputs nobody expects."},
-    {"id": "security", "name": "Security and abuse", "lenses": ["H"], "how": "Obsess over the threat model, abuse vectors, rate limits, secrets, injection, bots and reporting."},
-    {"id": "operations", "name": "Reliability and operations", "lenses": ["I", "M"], "how": "Obsess over failure modes, monitoring, deploys, rollback, incidents, runbooks, performance and the cost of running it."},
-    {"id": "logistics", "name": "Logistics and the real world", "lenses": ["J", "K"], "how": "Obsess over everything outside the software: physical flows, scheduling, third parties, vendors, SLAs, geography, support and what happens when a dependency is down."},
-    {"id": "experience", "name": "User experience and communication", "lenses": ["L"], "how": "Obsess over the flows, notifications, error messages, onboarding, mobile, offline, accessibility and every word the user reads."},
-    {"id": "quality", "name": "Testing and quality", "lenses": ["N", "P"], "how": "Obsess over acceptance criteria, the test plan, fixtures, how quality is proven every release, and the documentation that lets someone else take over."},
-    {"id": "delivery", "name": "Delivery, scope and risk", "lenses": ["A", "O"], "how": "Obsess over purpose, non-goals, phases, milestones, team, timeline, cost, risks and open questions. Say what is version one and what is not."}
   ]
 }

@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "about": "The five criteria every package and the final package are scored on, 0 to 10 each. Weights sum to 100. The engine computes totals from these; judges only write the per-criterion scores.",
+  "pass_threshold": 7,
+  "criteria": [
+    {"id": "completeness", "name": "Completeness", "weight": 35, "question": "How many cells of the union completeness matrix does the package fill with a concrete answer: a number, an owner, a rule, a state, a fallback?"},
+    {"id": "correctness", "name": "Correctness", "weight": 25, "question": "How many scenario probes does the package survive when traced through its own rules: blocked when it should block, allowed when it should allow, defined where it must be defined?"},
+    {"id": "task_fit", "name": "Task fit", "weight": 15, "question": "Does it do exactly what the task asked: nothing from the task missing, nothing invented beyond it?"},
+    {"id": "coherence", "name": "Coherence", "weight": 15, "question": "Do the rules agree with each other across files; does every state have a way out; does every rule have a number and an owner; could Claude Code build it from TASKS.md without guessing?"},
+    {"id": "simplicity", "name": "Simplicity", "weight": 10, "question": "For the same completeness, is this the less complicated design to build, run and explain?"}
+  ]
+}

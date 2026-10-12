@@ -1,15 +1,23 @@
 """Run folder layout and the state file. Every path the engine ever uses is defined here."""
+import glob
 import json
 import os
+import re
 import shutil
 import time
 
 from . import (ArenaError, LATEST_FILE, RUN_ROOT, STATE_FILE, VERSION, DEFAULT_GROUP_SIZE, DEFAULT_TOP_K,
-               DEFAULT_BUILDERS, DEFAULT_MAX_SURGERY, DEFAULT_WAVE)
+               DEFAULT_MAX_SURGERY, DEFAULT_WAVE, PACKAGE_REQUIRED)
+
+SKILL_DOCS = ("matrix.md", "lenses.md", "rubric.md", "criteria.json")
 
 
-def blueprint_out(d, aid):
-    return os.path.join(d, "blueprints", aid + ".md")
+def package_dir(d, aid):
+    return os.path.join(d, "packages", aid)
+
+
+def package_required(d, aid):
+    return [os.path.join(package_dir(d, aid), name) for name in PACKAGE_REQUIRED]
 
 
 def audit_out(d, gid):
@@ -24,36 +32,36 @@ def verdict_out(d):
     return os.path.join(d, "verdict", "verdict.json")
 
 
-def merged_out(d, version):
-    return os.path.join(d, "merged", "blueprint.v%d.md" % version)
+def final_dir(d, version):
+    return os.path.join(d, "final", "v%d" % version)
+
+
+def final_required(d, version):
+    return [os.path.join(final_dir(d, version), name) for name in PACKAGE_REQUIRED]
 
 
 def surgery_log_out(d, version):
-    return os.path.join(d, "merged", "surgery.v%d.md" % version)
+    return os.path.join(d, "final", "surgery.v%d.md" % version)
 
 
 def verify_out(d, version):
-    return os.path.join(d, "merged", "verify.v%d.json" % version)
+    return os.path.join(d, "final", "verify.v%d.json" % version)
 
 
-def build_dir(d, bid):
-    return os.path.join(d, "builds", bid)
+def deliverable_dir(d):
+    return os.path.join(d, "deliverable")
 
 
-def build_report_out(d, bid):
-    return os.path.join(build_dir(d, bid), "REPORT.md")
+def business_plan_out(d):
+    return os.path.join(deliverable_dir(d), "BUSINESS-PLAN.md")
 
 
-def build_verdict_out(d):
-    return os.path.join(d, "builds", "verdict.json")
+def pitch_deck_out(d):
+    return os.path.join(deliverable_dir(d), "PITCH-DECK.md")
 
 
-def merged_project_dir(d):
-    return os.path.join(d, "merged", "project")
-
-
-def build_report_merged_out(d):
-    return os.path.join(d, "merged", "BUILD-REPORT.md")
+def delivered_readme(d):
+    return os.path.join(deliverable_dir(d), "project", "README.md")
 
 
 def prompt_path(d, phase, job_id):
@@ -70,6 +78,15 @@ def task_path(d):
 
 def has_output(path):
     return os.path.isfile(path) and os.path.getsize(path) > 0
+
+
+def latest_final_version(d):
+    versions = []
+    for p in glob.glob(os.path.join(d, "final", "v*", "MATRIX.md")):
+        m = re.search(r"[/\\]v(\d+)[/\\]MATRIX\.md$", p)
+        if m and has_output(p):
+            versions.append(int(m.group(1)))
+    return max(versions) if versions else 0
 
 
 def new_run_dir(cwd):
@@ -94,8 +111,7 @@ def latest_run_dir(cwd):
     return run_dir
 
 
-def new_state(run_dir, n, seed, agents, groups, builders, options):
-    """A fresh state dict. `agents` and `builders` are the dealt cards, `groups` the audit groups."""
+def new_state(run_dir, n, seed, agents, groups, options):
     return {
         "version": VERSION,
         "seed": seed,
@@ -105,13 +121,11 @@ def new_state(run_dir, n, seed, agents, groups, builders, options):
         "top_k": options.get("top_k", DEFAULT_TOP_K),
         "max_surgery": options.get("max_surgery", DEFAULT_MAX_SURGERY),
         "wave": options.get("wave", DEFAULT_WAVE),
-        "build": bool(options.get("build", False)),
-        "builders_n": options.get("builders", DEFAULT_BUILDERS),
         "model_override": options.get("model_override"),
         "models": dict(options.get("models", {})),
+        "deliver_skills": list(options.get("deliver_skills", [])),
         "agents": agents,
         "groups": groups,
-        "builders": builders,
         "created": time.strftime("%Y-%m-%d %H:%M:%S"),
     }
 
@@ -119,19 +133,19 @@ def new_state(run_dir, n, seed, agents, groups, builders, options):
 def copy_task(src, run_dir):
     if not os.path.isfile(src):
         raise ArenaError("task file not found: %s" % src)
-    dst = task_path(run_dir)
     with open(src, encoding="utf-8") as fh:
         text = fh.read().rstrip("\n")
     if not text.strip():
         raise ArenaError("task file is empty: %s" % src)
+    dst = task_path(run_dir)
     with open(dst, "w", encoding="utf-8") as fh:
         fh.write(text + "\n")
     return dst
 
 
 def copy_skill_docs(skill_dir, run_dir):
-    """The judges read lenses.md and rubric.md from the run folder, so a run is self-contained."""
-    for name in ("lenses.md", "rubric.md", "lenses.json"):
+    """Judges read the method docs from the run folder, so a run is self-contained."""
+    for name in SKILL_DOCS:
         shutil.copy(os.path.join(skill_dir, name), os.path.join(run_dir, name))
 
 
@@ -157,7 +171,7 @@ def read_task(state):
 
 
 def read_json(path):
-    """Parsed JSON, or None when the file is missing. Raises ArenaError when present but broken."""
+    """Parsed JSON, or None when the file is missing or empty. ArenaError when present but broken."""
     if not has_output(path):
         return None
     with open(path, encoding="utf-8") as fh:

@@ -1,37 +1,37 @@
-You are the surgeon in an arena, pass {{version}}. The chief judge has picked a winning project blueprint, ordered transplants from other blueprints into it, and listed the gaps that no blueprint closed. You assemble one body: the winner, with every transplant worked in and every open gap filled or clearly flagged. The result must read as one document written by one hand, not a collage.
+You are the surgeon in an arena, pass {{version}}. The chief judge picked a winning project package, ordered transplants from other packages for every cell the winner left empty, and listed the gaps nobody filled. You assemble the final package: the winner, with every transplant worked in and every open gap filled or clearly flagged. The result must read as one project written by one hand, buildable by Claude Code from its TASKS.md without guessing.
 
-=== THE TASK (identical for every competitor) ===
+=== THE TASK ===
 {{task}}
 === END OF THE TASK ===
 
 Read first, in this order:
-1. The lenses: {{lenses_doc}}
-2. The rubric: {{rubric}}
-3. The verdict (winner, transplants, open gaps): {{verdict}}
-4. The winner's blueprint, {{winner}}: {{winner_blueprint}}
-5. The donor blueprints named in the transplants:
+1. The matrix method: {{matrix_doc}}
+2. The lenses: {{lenses_doc}}
+3. The rubric: {{rubric}}
+4. The verdict (winner, global union, transplants, open gaps): {{verdict}}
+5. The winner's package, {{winner}}: {{winner_dir}}
+6. The donor packages named in the transplants:
 {{donors}}
 
 {{previous}}
 
-Every blueprint exists at these paths, if the verdict or a gap sends you to one:
-{{all_blueprints}}
+Every package, if the verdict or a gap sends you to one:
+{{all_packages}}
 
 How to operate:
-1. Start from the base document (the winner, or the previous merged version on a later pass). Keep its structure, vocabulary and decisions unless a transplant or a gap fix requires a change.
-2. Work every transplant in. Rewrite the donor's part into the winner's terms, names and data model. Resolve every contradiction the transplant creates, and say in the log which side won and why. Never paste a section that refers to entities the winner does not have.
-3. Fill every open gap. For each one, write the concrete answer: the number, the owner, the rule, the state, the fallback. Where a gap genuinely needs the user's decision (a business choice with no reasonable default, such as the jurisdiction or the price), write the best default, mark it [DECISION NEEDED: <the question>] in place, and list it under "Assumptions and open questions". Do not leave a gap unfilled and unmarked.
-4. Then read the whole merged document once against the lenses page, A to P, as a hostile auditor, and fix what you find. The verifier that reads your work next will do exactly that.
-5. The merged blueprint must stand alone. Never write "see A017" or "as in the previous version".
-6. Do not create, edit or delete anything outside {{arena_dir}}. Say nothing about the arena, cards or competitor numbers inside the blueprint itself.
-
-Write the merged blueprint, complete, to {{out}}.
+1. Copy the base package (the winner, or the previous final version on a later pass) to {{out_dir}}/ with all its files. Never modify any competitor's folder.
+2. Work every transplant in. Take the donor's rule for that cell and rewrite it in the winner's vocabulary, entities, roles and files. Put it where the verdict says. Update every file the rule touches: POLICIES.md for the rule, ARCHITECTURE.md if it needs data or an endpoint, TASKS.md for the task that builds it, TESTS.md for the test that proves it, MATRIX.md for the cell. Resolve every contradiction the transplant creates and say in the log which side won and why.
+3. Fill every open gap. Write the concrete answer: the number, the owner, the rule, the state, the fallback, and give it the same homes in the files as a transplant. Where a gap genuinely needs the user's decision (a business choice with no reasonable default, such as the jurisdiction, the price or the maximum group size), write the best default, mark it [DECISION NEEDED: <the question>] in place in POLICIES.md, and list it in PRD.md under "Assumptions and open questions". Never leave a gap unfilled and unmarked.
+4. Rebuild MATRIX.md from the global union in the verdict: every union row and question, every cell now filled, with the "where" column pointing at the file and section. No cell may say EMPTY unless it is marked DECISION NEEDED.
+5. Read the whole package once against the matrix and the lenses as a hostile auditor, trace the probes from the audits through it, and fix what you find. The verifier that reads your work next will do exactly that.
+6. The package must stand alone. Never write "see A017" or "as in the previous version". Say nothing about the arena, cards or competitor numbers inside it.
+7. Do not create, edit or delete anything outside {{arena_dir}}.
 
 Write the surgery log to {{log_out}}, in this format:
-TRANSPLANT <n>: from <donor id> lens <X>, "<donor section>" -> "<winner section>". <what was changed to make it fit; which contradictions were resolved and how>
+TRANSPLANT <n>: cell <union id> "<row> / <question>" from <donor id> <file> "<section>" -> <file> "<section>". <what was rewritten to fit; which contradictions were resolved and how>
 (one per transplant, in the order of the verdict)
-GAP <n> [<severity>] lens <X>: <the gap> -> FILLED: <the concrete answer in one or two lines> | DECISION NEEDED: <the question and the default used>
-(one per open gap, in the order of the verdict, plus any gap you found yourself, marked SELF-FOUND)
+GAP <n> [<severity>]: cell <union id> "<row> / <question>" -> FILLED: <the concrete answer in one or two lines> | DECISION NEEDED: <the question and the default used>
+(one per open gap, then any gap you found yourself, marked SELF-FOUND)
 
-When both files are written, reply with this one line and nothing else:
+When the package and the log are written, reply with this one line and nothing else:
 MERGED v{{version}} transplants <n> gaps filled <n> decisions needed <n>

@@ -1,14 +1,16 @@
-# The A-to-Z audit
+# The lenses: the question generator
 
-Every judge in this arena scores every blueprint on all sixteen lenses below, 0 to 10 each. This is
-the page that catches the gaps a normal review misses: the spend limit nobody wrote down, the voting
-rule with no tie-break, the refund path with no owner. A lens scores high only when the blueprint
-answers the questions under it with specifics: numbers, names, owners, states. "To be decided later"
-scores as a gap.
+The lenses are not a checklist to tick. They are the sixteen angles a judge, a competitor or a
+verifier applies to **every row of the completeness matrix** (see `matrix.md`) to generate the
+questions that row must answer for this particular project. "Money" applied to the row "shared wallet
+x spend" generates: per-member limit, per-period limit, who raises it, what happens at the limit,
+overdraft, refund, fee, who is liable. "Governance" applied to "proposal x vote" generates:
+eligibility, weight, quorum, deadline, tie, changing a vote, sybil resistance, audit of the result.
 
-Weights are in `lenses.json`. The judge writes the per-lens scores; the engine does the arithmetic.
+A question that applies and has no concrete answer in the package is an empty cell. "To be decided
+later", "reasonable limits" and "standard practice" are empty cells.
 
-## Scoring anchors, for every lens
+## How a lens scores a row
 
 - **10**: every question below that applies to this project is answered concretely, and the answers
   hold up when you try to break them.

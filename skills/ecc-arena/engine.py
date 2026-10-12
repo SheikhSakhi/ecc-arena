@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """ecc-arena engine. The orchestrator drives a run with these commands:
 
-    python3 engine.py plan [--agents N | --quick | --full] [--build] [--builders B]
-    python3 engine.py init --task-file T [--agents N | --quick | --full] [--seed S] [--build] [--builders B]
+    python3 engine.py plan [--agents N | --quick | --full]
+    python3 engine.py init --task-file T [--agents N | --quick | --full] [--seed S] [--model M]
     python3 engine.py next                 # what to do now: the phase, the jobs left, the exact calls
     python3 engine.py prompts <phase>      # write the briefs, list the jobs still to run, in waves
-    python3 engine.py check <phase>        # which outputs are missing or broken
+    python3 engine.py check <phase>        # which outputs are missing
     python3 engine.py status               # where the run is
-    python3 engine.py winner               # the final report: merged blueprint, transplants, open gaps
+    python3 engine.py winner               # the final report: winner, transplants, gaps, deliverables
     python3 engine.py card <agent>         # one competitor's card
 
 State lives in .ecc-arena/<run>/arena.json under the directory you ran init in; later commands find it
@@ -19,14 +19,14 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from ecca import (ArenaError, SKILL_DIR, PHASES, DEFAULT_AGENTS, QUICK_AGENTS, FULL_AGENTS, DEFAULT_GROUP_SIZE,
-                  DEFAULT_TOP_K, DEFAULT_BUILDERS, DEFAULT_MAX_SURGERY, DEFAULT_WAVE)  # noqa: E402
+from ecca import (ArenaError, SKILL_DIR, PHASES, DEFAULT_AGENTS, QUICK_AGENTS, FULL_AGENTS, DEFAULT_GROUP_SIZE,  # noqa: E402
+                  DEFAULT_TOP_K, DEFAULT_MAX_SURGERY, DEFAULT_WAVE)
 from ecca import state as st  # noqa: E402
-from ecca.deal import load_deck, deal, deal_builders, make_groups, combo_count  # noqa: E402
-from ecca.jobs import next_action, phase_jobs, missing_jobs, latest_merged_version  # noqa: E402
+from ecca.deal import load_deck, deal, make_groups, combo_count  # noqa: E402
+from ecca.jobs import next_action, phase_jobs, missing_jobs, verify_summary  # noqa: E402
 from ecca.plan import plan_totals, compare_with_bracket  # noqa: E402
-from ecca.prompts import write_prompts, verify_summary  # noqa: E402
-from ecca.scoring import validate_verdict, validate_build_verdict  # noqa: E402
+from ecca.prompts import write_prompts  # noqa: E402
+from ecca.scoring import validate_verdict  # noqa: E402
 
 
 def _agents_arg(args):
@@ -39,13 +39,13 @@ def _agents_arg(args):
 
 def cmd_plan(args):
     n = _agents_arg(args)
-    t = plan_totals(n, group_size=args.group_size, max_surgery=args.max_surgery, build=args.build,
-                    builders=args.builders, wave=args.wave)
-    print("%d competitors, waves of %d%s" % (n, args.wave, ", then %d builders" % args.builders if args.build else ""))
+    t = plan_totals(n, group_size=args.group_size, max_surgery=args.max_surgery, wave=args.wave)
+    print("%d competitors, waves of %d" % (n, args.wave))
     print("  %-28s %6s %6s" % ("phase", "calls", "waves"))
     for r in t["rows"]:
         print("  %-28s %6d %6d" % (r["phase"], r["calls"], r["waves"]))
     print("  %-28s %3d..%-3d %6d" % ("total", t["calls_min"], t["calls_max"], t["waves_max"]))
+    print("Each competitor call prepares a whole project package, so it is many times the size of a judge call.")
     print("For comparison, the bracket arena costs %d sub-agent calls for %d agents." % (compare_with_bracket(n), n))
 
 
@@ -55,18 +55,14 @@ def cmd_init(args):
     seed = args.seed if args.seed is not None else int.from_bytes(os.urandom(4), "big")
     agents = deal(n, seed, deck)
     groups = make_groups(sorted(agents), args.group_size)
-    builders = deal_builders(args.builders, seed, deck) if args.build else {}
     run_dir = st.new_run_dir(os.getcwd())
     st.copy_task(args.task_file, run_dir)
     st.copy_skill_docs(SKILL_DIR, run_dir)
-    options = {"group_size": args.group_size, "top_k": args.top_k, "max_surgery": args.max_surgery,
-               "wave": args.wave, "build": args.build, "builders": args.builders, "models": deck["models"],
-               "model_override": args.model}
-    state = st.new_state(run_dir, n, seed, agents, groups, builders, options)
-    st.save_state(state)
+    options = {"group_size": args.group_size, "top_k": args.top_k, "max_surgery": args.max_surgery, "wave": args.wave,
+               "models": deck["models"], "model_override": args.model, "deliver_skills": deck["deliver_skills"]}
+    st.save_state(st.new_state(run_dir, n, seed, agents, groups, options))
     print("run: %s" % run_dir)
-    print("seed %d, %d competitors dealt from %d distinct cards, %d audit groups%s" % (
-        seed, n, combo_count(deck), len(groups), ", %d builders" % len(builders) if builders else ""))
+    print("seed %d, %d competitors dealt from %d distinct cards, %d audit group(s)" % (seed, n, combo_count(deck), len(groups)))
     print("Next: python3 engine.py next")
 
 
@@ -77,7 +73,7 @@ def _load(args):
 def _print_wave_plan(state, phase, jobs, left):
     w = state["wave"]
     waves = [left[i:i + w] for i in range(0, len(left), w)]
-    print("phase %s: %d jobs, %d still to run, %d wave(s) of up to %d" % (phase, len(jobs), len(left), len(waves), w))
+    print("phase %s: %d job(s), %d still to run, %d wave(s) of up to %d" % (phase, len(jobs), len(left), len(waves), w))
     for k, wave in enumerate(waves, start=1):
         print("  wave %d:" % k)
         for j in wave:
@@ -123,19 +119,17 @@ def cmd_status(args):
     state = _load(args)
     d = state["dir"]
     print("run %s" % d)
-    print("seed %s, %d competitors, %d groups, build=%s" % (state["seed"], state["n"], len(state["groups"]), state["build"]))
-    for phase in ("blueprint", "audit"):
+    print("seed %s, %d competitors, %d group(s)" % (state["seed"], state["n"], len(state["groups"])))
+    for phase in ("compete", "audit"):
         jobs = phase_jobs(state, phase)
         print("  %-10s %d of %d written" % (phase, len(jobs) - len(missing_jobs(jobs)), len(jobs)))
     print("  %-10s %s" % ("verdict", "written" if st.has_output(st.verdict_out(d)) else "-"))
-    v = latest_merged_version(d)
-    print("  %-10s v%d" % ("merged", v) if v else "  merged     -")
+    v = st.latest_final_version(d)
+    print("  %-10s %s" % ("final", "v%d" % v if v else "-"))
     summary = verify_summary(state)
     if summary:
         print("  %-10s v%d total %s, %s" % ("verify", summary["version"], summary["total"], "PASS" if summary["pass"] else "FAIL"))
-    if state["build"]:
-        jobs = phase_jobs(state, "build")
-        print("  %-10s %d of %d reported" % ("builds", len(jobs) - len(missing_jobs(jobs)), len(jobs)))
+    print("  %-10s %s" % ("deliver", "written" if st.has_output(st.business_plan_out(d)) else "-"))
     try:
         phase, left, _, _ = next_action(state)
         print("next: %s (%d job(s))" % (phase, len(left)))
@@ -150,43 +144,37 @@ def cmd_winner(args):
     if verdict_doc is None:
         raise ArenaError("no verdict yet")
     verdict = validate_verdict(verdict_doc, list(state["agents"]))
-    v = latest_merged_version(d)
     card = state["agents"][verdict["winner"]]["card"]
-    print("winner: %s  (%s / %s / %s / emphasis %s)" % (verdict["winner"], card["chain"]["name"], card["reasoning"]["name"],
-                                                       card["strategy"]["name"], card["emphasis"]["name"]))
+    v = st.latest_final_version(d)
+    print("winner: %s  (%s / %s / %s)" % (verdict["winner"], card["chain"]["name"], card["reasoning"]["name"], card["strategy"]["name"]))
     print("reason: %s" % verdict["reason"])
-    print("merged blueprint: %s" % (st.merged_out(d, v) if v else "(none yet)"))
-    print("surgery log: %s" % (st.surgery_log_out(d, v) if v else "(none yet)"))
-    print("transplants: %d" % len(verdict["transplants"]))
+    print("union cells: %d, transplants: %d, open gaps at verdict: %d" % (len(verdict["union"]), len(verdict["transplants"]), len(verdict["open_gaps"])))
     for t in verdict["transplants"]:
-        print("  from %s, lens %s: %s -> %s" % (t["from"], t["lens"], t["section"], t["into"]))
+        print("  transplant %s from %s: %s / %s -> %s" % (t["union_id"], t["from"], t["file"], t["section"], t["into"]))
+    for g in verdict["open_gaps"]:
+        print("  open gap [%s] %s / %s: %s" % (g["severity"], g["row"], g["question"], g["what"]))
+    print("final package: %s" % (st.final_dir(d, v) if v else "(none yet)"))
+    print("surgery log: %s" % (st.surgery_log_out(d, v) if v else "(none yet)"))
     summary = verify_summary(state)
     if summary:
-        print("verification v%d: total %s, %s" % (summary["version"], summary["total"], "PASS" if summary["pass"] else "FAIL"))
+        print("verification v%d: total %s, %s. %s" % (summary["version"], summary["total"], "PASS" if summary["pass"] else "FAIL", summary["summary"]))
         for g in summary["gaps"]:
-            print("  open gap [%s] lens %s: %s" % (g["severity"], g["lens"], g["what"]))
-    _print_build(state)
+            print("  remaining gap [%s] %s / %s: %s" % (g["severity"], g["row"], g["question"], g["what"]))
+        for p in summary["undefined"]:
+            print("  undefined probe: %s (%s)" % (p["scenario"], p["where"]))
+        for c in summary["contradictions"]:
+            print("  contradiction: %s" % c)
+    if st.has_output(st.business_plan_out(d)):
+        print("deliverables: %s" % st.deliverable_dir(d))
+        print("  project: %s" % os.path.join(st.deliverable_dir(d), "project"))
+        print("  business plan: %s" % st.business_plan_out(d))
+        print("  pitch deck: %s" % st.pitch_deck_out(d))
     print("full record: %s" % d)
-
-
-def _print_build(state):
-    if not state["build"]:
-        return
-    doc = st.read_json(st.build_verdict_out(state["dir"]))
-    if doc is None:
-        print("build: no build verdict yet")
-        return
-    bv = validate_build_verdict(doc, list(state["builders"]))
-    print("build winner: %s. %s" % (bv["winner"], bv["reason"]))
-    for t in bv["transplants"]:
-        print("  file from %s: %s (%s)" % (t["from"], t["path"], t["why"]))
-    if st.has_output(st.build_report_merged_out(state["dir"])):
-        print("merged project: %s (report %s)" % (st.merged_project_dir(state["dir"]), st.build_report_merged_out(state["dir"])))
 
 
 def cmd_card(args):
     state = _load(args)
-    agent = state["agents"].get(args.agent) or state["builders"].get(args.agent)
+    agent = state["agents"].get(args.agent)
     if not agent:
         raise ArenaError("unknown agent %s" % args.agent)
     for key, part in agent["card"].items():
@@ -196,10 +184,8 @@ def cmd_card(args):
 def _size_flags(p):
     g = p.add_mutually_exclusive_group()
     g.add_argument("--agents", type=int, help="number of competitors (default %d)" % DEFAULT_AGENTS)
-    g.add_argument("--quick", action="store_true", help="%d competitors, one per emphasis" % QUICK_AGENTS)
+    g.add_argument("--quick", action="store_true", help="%d competitors" % QUICK_AGENTS)
     g.add_argument("--full", action="store_true", help="%d competitors" % FULL_AGENTS)
-    p.add_argument("--build", action="store_true", help="after the blueprint, build the project with B builders")
-    p.add_argument("--builders", type=int, default=DEFAULT_BUILDERS)
     p.add_argument("--group-size", type=int, default=DEFAULT_GROUP_SIZE)
     p.add_argument("--max-surgery", type=int, default=DEFAULT_MAX_SURGERY)
     p.add_argument("--wave", type=int, default=DEFAULT_WAVE)
@@ -219,8 +205,7 @@ def build_parser():
     s.add_argument("--top-k", type=int, default=DEFAULT_TOP_K)
     s.add_argument("--model", help="use this model for every role instead of the per-role defaults in deck.json")
     s.set_defaults(fn=cmd_init)
-    s = sub.add_parser("next", help="what to do now")
-    s.set_defaults(fn=cmd_next)
+    sub.add_parser("next", help="what to do now").set_defaults(fn=cmd_next)
     for name, fn in (("prompts", cmd_prompts), ("check", cmd_check)):
         s = sub.add_parser(name)
         s.add_argument("phase", choices=PHASES)

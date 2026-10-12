@@ -1,58 +1,60 @@
 # The rubric
 
-Every blueprint and every build in this arena is scored the same way. Judges write per-lens scores;
-the engine computes the totals. Nothing is scored on style, length or confidence.
+Every package is scored the same way. Judges write per-criterion scores, gaps and probes; the engine
+computes totals and ranks. Nothing is scored on style, length, confidence or the judge's taste.
 
-## Blueprint score
+## The five criteria (weights in `criteria.json`)
 
-Sixteen lenses from `lenses.md`, each 0 to 10, each with the weight in `lenses.json`.
+| criterion | weight | scored against |
+| --- | --- | --- |
+| Completeness | 35 | the union completeness matrix: filled cells over applicable cells |
+| Correctness | 25 | the scenario probes: survived over run |
+| Task fit | 15 | the task text: nothing missing, nothing invented |
+| Coherence | 15 | contradictions, dead-end states, rules without numbers or owners, buildability from TASKS.md |
+| Simplicity | 10 | the less complicated design at the same completeness |
 
-    total = sum(score_lens x weight_lens) / 10        (0 to 100)
+    total = sum(score x weight) / 10        (0 to 100)
 
-Plus a `fatal` flag. Set it only for a verified flaw that makes the blueprint unusable or dangerous
-for the task: it answers a different question, it breaks a hard constraint the user stated, it would
-break the law in the stated jurisdiction, money could be lost with no recovery, or a core flow cannot
-work as written. A fatal blueprint cannot rank above a non-fatal one, whatever the totals say.
+Anchors, for every criterion: 10 means nothing you can fault after checking yourself; 7 means
+covered with one or two thin spots; 4 means a real hole a builder would hit; 0 to 2 means absent or
+wrong. Use the whole scale. A 7 is not a polite default.
+
+## The fatal rule
+
+`fatal` is set only for a verified flaw that makes the package unusable for the task: it answers a
+different question, breaks a hard constraint the user stated, would break the law in the stated
+jurisdiction, loses money with no recovery, a core flow cannot work as written, or a required file is
+missing. A fatal package cannot rank above a non-fatal one, whatever the totals say.
 
 ## Ranking across groups
 
-Group judges see ten blueprints each, so scores drift between groups. The engine normalises: each
-blueprint's rank inside its group counts first, then its raw total. The chief judge gets the top K
-by that order and may read any blueprint beyond the top K when a group audit says it holds the best
-part for some lens.
+Group judges see up to ten packages each, so scores drift between groups. The engine ranks by rank
+inside the group first, then raw total. The chief judge gets the top K by that order and may read
+any package beyond the top K that the global union names as the only holder of a cell.
 
-## Best parts
+## Transplants: only for gaps
 
-For every lens, each group judge names the blueprint in its group that handles that lens best, with
-the section and one line on why. These inventories are how the chief judge finds parts to transplant
-into the winner. A best part must be concrete enough to lift: a rule with numbers, a state machine, a
-flow, a table, a policy. "Good coverage of security" is not a part.
+A transplant is allowed only when a union cell is empty in the winner and filled in a donor. If more
+than one donor fills it, the donor whose cell passed its probe and whose design is closest to the
+winner's is chosen. The surgeon rewrites the part into the winner's vocabulary, files and data model.
+A transplant is never ordered because the donor's version is "better" than a filled cell in the
+winner. Every transplant is logged with the union cell, the donor, the file and what changed.
 
-## Transplants
+## Open gaps
 
-A transplant is justified only when the donor's part scores higher on that lens than the winner's and
-fits the winner's design without contradiction. The surgeon rewrites the part into the winner's
-vocabulary and structure; it does not paste. Every transplant is logged with donor, lens, section and
-what changed.
+A union cell empty in every package, or a probe nobody defines, is an open gap. The surgeon fills it
+with a concrete default where a reasonable default exists, and marks `DECISION NEEDED: <question>`
+where only the user can decide. Open gaps are reported to the user; they are never dropped.
 
-## Verification pass
+## Verification
 
-The merged blueprint passes when every lens scores at least the `pass_threshold` in `lenses.json`
-(7), no gap is FATAL or MAJOR, and nothing in it contradicts the task. Otherwise the surgeon gets the
-gap list and one more pass. After the last allowed pass, the open gaps go to the user in the report,
-not silently.
-
-## Build score, when the arena builds
-
-A build is judged on the same lenses as applied to running code, plus three hard checks: it installs
-with the documented command, its tests run and pass, and every feature in the merged blueprint is
-present or explicitly listed as not built. A build that fails a hard check is fatal. File-level
-transplants from other builds follow the same rule as blueprint transplants, and the merged build must
-pass its tests after surgery.
+The final package passes when every criterion scores at least the threshold (7), no gap is FATAL or
+MAJOR, there is no contradiction between files, and no probe is undefined. Otherwise the surgeon gets
+the list and one more pass. After the last allowed pass, what remains goes to the user in the report.
 
 ## What the judge does not reward
 
 - Length, confidence, or writing about quality instead of showing it.
-- Agreement with the judge's own taste where the task does not ask for it.
 - The approach: judges never see the cards and do not guess them.
+- Agreement with the judge's own taste where the task does not ask for it.
 - Anything that is "configurable later".

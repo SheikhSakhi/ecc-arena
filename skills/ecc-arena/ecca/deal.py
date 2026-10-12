@@ -1,5 +1,5 @@
-"""Deal the cards. Emphasis and chain go round-robin so every lens has an obsessive owner; reasoning and
-strategy are drawn at random with no repeated full card."""
+"""Deal the cards. Chains go round-robin so every ECC discipline is in the room; reasoning and strategy
+are drawn at random with no repeated full card. Also resolves where ECC agents and skills live."""
 import json
 import os
 import random
@@ -13,14 +13,14 @@ MAX_DRAWS = 10000
 def load_deck(path=DECK_PATH):
     with open(path, encoding="utf-8") as fh:
         deck = json.load(fh)
-    for key in ("chains", "reasoning", "strategies", "emphasis", "models"):
+    for key in ("chains", "reasoning", "strategies", "models", "deliver_skills"):
         if key not in deck:
             raise ArenaError("deck.json is missing '%s'" % key)
     return deck
 
 
 def combo_count(deck):
-    return len(deck["chains"]) * len(deck["reasoning"]) * len(deck["strategies"]) * len(deck["emphasis"])
+    return len(deck["chains"]) * len(deck["reasoning"]) * len(deck["strategies"])
 
 
 def agent_ids(n):
@@ -28,78 +28,87 @@ def agent_ids(n):
     return ["A" + str(i).zfill(width) for i in range(1, n + 1)]
 
 
-def builder_ids(n):
-    return ["B" + str(i) for i in range(1, n + 1)]
-
-
 def _card_key(card):
-    return (card["chain"]["id"], card["reasoning"]["id"], card["strategy"]["id"], card["emphasis"]["id"])
+    return (card["chain"]["id"], card["reasoning"]["id"], card["strategy"]["id"])
 
 
 def deal(n, seed, deck):
-    """n distinct cards, keyed by agent id. Deterministic for a seed."""
+    """n distinct cards keyed by agent id. Deterministic for a seed."""
     if n < 2:
         raise ArenaError("need at least 2 competitors")
     if n > combo_count(deck):
         raise ArenaError("only %d distinct cards exist, cannot deal %d" % (combo_count(deck), n))
     rng = random.Random(seed)
-    chains, emphases = deck["chains"], deck["emphasis"]
-    chain_order = list(range(len(chains)))
-    emphasis_order = list(range(len(emphases)))
-    rng.shuffle(chain_order)
-    rng.shuffle(emphasis_order)
+    chains = deck["chains"]
+    order = list(range(len(chains)))
+    rng.shuffle(order)
     seen, cards = set(), {}
     for i, aid in enumerate(agent_ids(n)):
-        card = _draw(rng, deck, chains[chain_order[i % len(chains)]], emphases[emphasis_order[i % len(emphases)]], seen)
+        card = _draw(rng, deck, chains[order[i % len(chains)]], seen)
         seen.add(_card_key(card))
         cards[aid] = {"card": card}
     return cards
 
 
-def _draw(rng, deck, chain, emphasis, seen):
+def _draw(rng, deck, chain, seen):
     for _ in range(MAX_DRAWS):
-        card = {"chain": chain, "reasoning": rng.choice(deck["reasoning"]),
-                "strategy": rng.choice(deck["strategies"]), "emphasis": emphasis}
+        card = {"chain": chain, "reasoning": rng.choice(deck["reasoning"]), "strategy": rng.choice(deck["strategies"])}
         if _card_key(card) not in seen:
             return card
     raise ArenaError("could not find an unused card after %d draws" % MAX_DRAWS)
 
 
-def deal_builders(n, seed, deck):
-    """Builders differ by chain and strategy only; they all build the same merged blueprint."""
-    if n < 1:
-        raise ArenaError("need at least 1 builder")
-    if n > len(deck["chains"]):
-        raise ArenaError("only %d chains exist, cannot deal %d builders" % (len(deck["chains"]), n))
-    rng = random.Random(seed + 1)
-    chains = rng.sample(deck["chains"], n)
-    return {bid: {"card": {"chain": chains[i], "strategy": rng.choice(deck["strategies"])}}
-            for i, bid in enumerate(builder_ids(n))}
-
-
 def make_groups(ids, group_size):
-    """Audit groups of about group_size, keyed G01, G02 ... Each group gets at least 2 entries."""
+    """Audit groups of about group_size, keyed G01, G02 ..."""
     if group_size < 2:
         raise ArenaError("group size must be at least 2")
     count = max(1, -(-len(ids) // group_size))
-    groups = {}
-    for k in range(count):
-        gid = "G" + str(k + 1).zfill(2)
-        groups[gid] = ids[k::count]
-    return groups
+    return {"G" + str(k + 1).zfill(2): ids[k::count] for k in range(count)}
 
 
-def ecc_agents_dir():
-    return os.path.join(os.environ.get("CLAUDE_CONFIG_DIR", os.path.expanduser("~/.claude")), "agents")
+def claude_dir():
+    return os.environ.get("CLAUDE_CONFIG_DIR", os.path.expanduser("~/.claude"))
 
 
-def chain_agent_lines(chain):
-    """One line per ECC agent in the chain, with the path to its definition when it is installed."""
-    lines = []
-    for name in chain["agents"]:
-        path = os.path.join(ecc_agents_dir(), name + ".md")
+def ecc_roots():
+    """Where ECC agents and skills may live, in order: the user's Claude config, this skill's vendored
+    copy, and the repository's vendored copy when running from a checkout."""
+    return [claude_dir(), os.path.join(SKILL_DIR, "ecc"), os.path.join(os.path.dirname(os.path.dirname(SKILL_DIR)), "ecc")]
+
+
+def find_agent(name):
+    for root in ecc_roots():
+        path = os.path.join(root, "agents", name + ".md")
         if os.path.isfile(path):
+            return path
+    return None
+
+
+def find_skill(name):
+    for root in ecc_roots():
+        path = os.path.join(root, "skills", name, "SKILL.md")
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+def agent_lines(names):
+    lines = []
+    for name in names:
+        path = find_agent(name)
+        if path:
             lines.append("- %s: read %s and work in that role." % (name, path))
         else:
             lines.append("- %s: that ECC agent is not installed here; work from its name and the chain's description." % name)
+    return "\n".join(lines)
+
+
+def skill_lines(names):
+    lines = []
+    for name in names:
+        path = find_skill(name)
+        if path:
+            lines.append("- %s: read %s and apply it." % (name, path))
+        else:
+            lines.append("- %s: that ECC skill is not installed here; apply what its name implies." % name)
     return "\n".join(lines)

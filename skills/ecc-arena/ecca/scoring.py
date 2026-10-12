@@ -4,21 +4,22 @@ import os
 
 from . import ArenaError, SKILL_DIR
 
-LENSES_PATH = os.path.join(SKILL_DIR, "lenses.json")
+CRITERIA_PATH = os.path.join(SKILL_DIR, "criteria.json")
 SEVERITIES = ("FATAL", "MAJOR", "MINOR")
 BLOCKING = ("FATAL", "MAJOR")
+PROBE_RESULTS = ("BLOCKED", "ALLOWED", "UNDEFINED")
 
 
-def load_lenses(path=LENSES_PATH):
+def load_criteria(path=CRITERIA_PATH):
     with open(path, encoding="utf-8") as fh:
         doc = json.load(fh)
-    lenses = doc.get("lenses") or []
-    if not lenses:
-        raise ArenaError("lenses.json has no lenses")
-    if sum(l["weight"] for l in lenses) != 100:
-        raise ArenaError("lens weights must sum to 100")
-    return {"ids": [l["id"] for l in lenses], "names": {l["id"]: l["name"] for l in lenses},
-            "weights": {l["id"]: l["weight"] for l in lenses}, "threshold": doc.get("pass_threshold", 7)}
+    items = doc.get("criteria") or []
+    if not items:
+        raise ArenaError("criteria.json has no criteria")
+    if sum(c["weight"] for c in items) != 100:
+        raise ArenaError("criteria weights must sum to 100")
+    return {"ids": [c["id"] for c in items], "names": {c["id"]: c["name"] for c in items},
+            "weights": {c["id"]: c["weight"] for c in items}, "threshold": doc.get("pass_threshold", 7)}
 
 
 def _score(value, where):
@@ -31,12 +32,12 @@ def _score(value, where):
     return v
 
 
-def lens_total(scores, lenses, where):
-    """Weighted 0..100 total. Every lens must be present."""
-    missing = [l for l in lenses["ids"] if l not in scores]
+def total(scores, criteria, where):
+    """Weighted 0..100 total. Every criterion must be present."""
+    missing = [c for c in criteria["ids"] if c not in (scores or {})]
     if missing:
-        raise ArenaError("%s: missing lens scores %s" % (where, ", ".join(missing)))
-    return round(sum(_score(scores[l], where + " lens " + l) * lenses["weights"][l] for l in lenses["ids"]) / 10, 1)
+        raise ArenaError("%s: missing scores for %s" % (where, ", ".join(missing)))
+    return round(sum(_score(scores[c], where + " " + c) * criteria["weights"][c] for c in criteria["ids"]) / 10, 1)
 
 
 def _truthy(v):
@@ -49,12 +50,33 @@ def _gaps(raw, where):
         sev = str(g.get("severity", "MINOR")).upper()
         if sev not in SEVERITIES:
             raise ArenaError("%s: gap severity %r must be one of %s" % (where, sev, "/".join(SEVERITIES)))
-        gaps.append({"lens": g.get("lens", "?"), "severity": sev, "what": g.get("what", ""), "fix": g.get("fix", "")})
+        gaps.append({"union_id": g.get("union_id"), "row": g.get("row", ""), "question": g.get("question", ""),
+                     "severity": sev, "what": g.get("what", ""), "fix": g.get("fix", "")})
     return gaps
 
 
-def validate_audit(doc, gid, expected, lenses):
-    """Normalised group audit: entries with computed totals, and the best-part inventory."""
+def _probes(raw, where):
+    probes = []
+    for p in raw or []:
+        result = str(p.get("result", "UNDEFINED")).upper()
+        if result not in PROBE_RESULTS:
+            raise ArenaError("%s: probe result %r must be one of %s" % (where, result, "/".join(PROBE_RESULTS)))
+        probes.append({"scenario": p.get("scenario", ""), "result": result, "where": p.get("where", "")})
+    return probes
+
+
+def _union(raw, allowed):
+    cells = []
+    for c in raw or []:
+        if not isinstance(c, dict) or not c.get("id"):
+            continue
+        filled = [a for a in (c.get("filled_by") or []) if a in allowed]
+        cells.append({"id": c["id"], "row": c.get("row", ""), "question": c.get("question", ""), "filled_by": filled})
+    return cells
+
+
+def validate_audit(doc, gid, expected, criteria):
+    """Normalised group audit: union cells, entries with computed totals, gaps and probes."""
     where = "audit " + gid
     entries = doc.get("entries")
     if not isinstance(entries, dict):
@@ -64,32 +86,26 @@ def validate_audit(doc, gid, expected, lenses):
         raise ArenaError("%s: no scores for %s" % (where, ", ".join(missing)))
     out = {}
     for aid in expected:
-        e = entries[aid]
-        scores = e.get("scores") or {}
-        out[aid] = {"scores": {l: _score(scores.get(l), "%s %s" % (where, aid)) for l in lenses["ids"]},
-                    "total": lens_total(scores, lenses, "%s %s" % (where, aid)),
-                    "fatal": _truthy(e.get("fatal", False)), "fatal_reason": e.get("fatal_reason", ""),
-                    "gaps": _gaps(e.get("gaps"), "%s %s" % (where, aid)), "notes": e.get("notes", "")}
-    best = {}
-    for lens, part in (doc.get("best_parts") or {}).items():
-        if isinstance(part, dict) and part.get("entry") in expected:
-            best[lens] = {"entry": part["entry"], "section": part.get("section", ""), "why": part.get("why", "")}
-    return {"group": gid, "entries": out, "best_parts": best}
+        e, w = entries[aid], "%s %s" % (where, aid)
+        out[aid] = {"scores": {c: _score((e.get("scores") or {}).get(c), w + " " + c) for c in criteria["ids"]},
+                    "total": total(e.get("scores"), criteria, w), "fatal": _truthy(e.get("fatal", False)),
+                    "fatal_reason": e.get("fatal_reason", ""), "gaps": _gaps(e.get("gaps"), w),
+                    "probes": _probes(e.get("probes"), w), "notes": e.get("notes", "")}
+    union = _union(doc.get("union"), set(expected))
+    if not union:
+        raise ArenaError("%s: 'union' must list at least one matrix cell" % where)
+    return {"group": gid, "entries": out, "union": union}
 
 
 def rank_group(audit):
-    """Entries of one group, best first: non-fatal before fatal, then total."""
-    items = [(aid, e) for aid, e in audit["entries"].items()]
-    items.sort(key=lambda kv: (kv[1]["fatal"], -kv[1]["total"], kv[0]))
+    items = sorted(audit["entries"].items(), key=lambda kv: (kv[1]["fatal"], -kv[1]["total"], kv[0]))
     return [{"id": aid, "group": audit["group"], "group_rank": i + 1, "total": e["total"], "fatal": e["fatal"]}
             for i, (aid, e) in enumerate(items)]
 
 
 def rank_all(audits):
     """Global order: group rank first (judges drift between groups), then raw total."""
-    rows = []
-    for audit in audits:
-        rows.extend(rank_group(audit))
+    rows = [r for audit in audits for r in rank_group(audit)]
     rows.sort(key=lambda r: (r["fatal"], r["group_rank"], -r["total"], r["id"]))
     return rows
 
@@ -98,13 +114,18 @@ def shortlist(ranking, k):
     return [r for r in ranking if not r["fatal"]][:k] or ranking[:k]
 
 
-def best_parts_index(audits):
-    """lens -> list of {entry, section, why, group}, one per group that named one."""
-    index = {}
+def merge_unions(audits):
+    """Global union keyed by (row, question), with the full list of competitors that filled it."""
+    merged = {}
     for audit in audits:
-        for lens, part in audit["best_parts"].items():
-            index.setdefault(lens, []).append(dict(part, group=audit["group"]))
-    return index
+        for cell in audit["union"]:
+            key = (cell["row"].strip().lower(), cell["question"].strip().lower())
+            entry = merged.setdefault(key, {"row": cell["row"], "question": cell["question"], "filled_by": [],
+                                            "group_ids": []})
+            entry["filled_by"] = sorted(set(entry["filled_by"]) | set(cell["filled_by"]))
+            entry["group_ids"].append("%s:%s" % (audit["group"], cell["id"]))
+    cells = sorted(merged.values(), key=lambda c: (c["row"], c["question"]))
+    return [dict(c, id="U%d" % (i + 1), prevalence=len(c["filled_by"])) for i, c in enumerate(cells)]
 
 
 def validate_verdict(doc, agent_ids):
@@ -117,41 +138,42 @@ def validate_verdict(doc, agent_ids):
             raise ArenaError("verdict: transplant from unknown competitor %r" % t.get("from"))
         if t["from"] == winner:
             raise ArenaError("verdict: a transplant cannot come from the winner itself")
-        transplants.append({"from": t["from"], "lens": t.get("lens", "?"), "section": t.get("section", ""),
-                            "into": t.get("into", ""), "why": t.get("why", "")})
+        if not t.get("union_id"):
+            raise ArenaError("verdict: every transplant must name the union cell it fills (union_id)")
+        transplants.append({"union_id": t["union_id"], "from": t["from"], "file": t.get("file", ""),
+                            "section": t.get("section", ""), "into": t.get("into", ""), "why": t.get("why", "")})
     return {"winner": winner, "reason": doc.get("reason", ""), "ranking": doc.get("ranking") or [],
-            "transplants": transplants, "open_gaps": _gaps(doc.get("open_gaps"), "verdict")}
+            "union": doc.get("union") or [], "transplants": transplants, "open_gaps": _gaps(doc.get("open_gaps"), "verdict")}
 
 
-def validate_verify(doc, lenses):
-    """The engine decides pass/fail from the scores and gaps; the judge's own 'pass' is ignored."""
-    scores = doc.get("scores") or {}
-    total = lens_total(scores, lenses, "verify")
+def validate_verify(doc, criteria):
+    """The engine decides pass/fail from scores, gaps, probes and contradictions. Any 'pass' the judge
+    wrote is ignored."""
+    scores = {c: _score((doc.get("scores") or {}).get(c), "verify " + c) for c in criteria["ids"]}
     gaps = _gaps(doc.get("gaps"), "verify")
+    probes = _probes(doc.get("probes"), "verify")
     fatal = _truthy(doc.get("fatal", False))
-    low = [l for l in lenses["ids"] if _score(scores[l], "verify") < lenses["threshold"]]
+    low = [c for c in criteria["ids"] if scores[c] < criteria["threshold"]]
     blocking = [g for g in gaps if g["severity"] in BLOCKING]
+    undefined = [p for p in probes if p["result"] == "UNDEFINED"]
     contradictions = list(doc.get("contradictions") or [])
-    passed = not fatal and not low and not blocking and not contradictions
-    return {"total": total, "scores": {l: _score(scores[l], "verify") for l in lenses["ids"]}, "fatal": fatal,
-            "gaps": gaps, "low_lenses": low, "contradictions": contradictions, "pass": passed}
+    passed = not (fatal or low or blocking or undefined or contradictions)
+    return {"total": total(scores, criteria, "verify"), "scores": scores, "fatal": fatal, "gaps": gaps,
+            "probes": probes, "low": low, "undefined": undefined, "contradictions": contradictions, "pass": passed,
+            "summary": doc.get("summary", "")}
 
 
-def validate_build_verdict(doc, builder_ids):
-    winner = doc.get("winner")
-    if winner not in builder_ids:
-        raise ArenaError("build verdict: winner %r is not a builder id" % winner)
-    checks = doc.get("hard_checks") or {}
-    missing = [b for b in builder_ids if b not in checks]
-    if missing:
-        raise ArenaError("build verdict: no hard_checks for %s" % ", ".join(missing))
-    w = checks[winner]
-    if not all(_truthy(w.get(k, False)) for k in ("installs", "tests_pass")):
-        raise ArenaError("build verdict: the winner must install and pass its tests; %s does not" % winner)
-    transplants = []
-    for t in doc.get("transplants") or []:
-        if t.get("from") not in builder_ids or t["from"] == winner:
-            raise ArenaError("build verdict: bad transplant source %r" % t.get("from"))
-        transplants.append({"from": t["from"], "path": t.get("path", ""), "why": t.get("why", "")})
-    return {"winner": winner, "reason": doc.get("reason", ""), "hard_checks": checks,
-            "transplants": transplants, "open_gaps": _gaps(doc.get("open_gaps"), "build verdict")}
+def fail_reason(result):
+    parts = []
+    if result["fatal"]:
+        parts.append("fatal")
+    if result["low"]:
+        parts.append("low " + ",".join(result["low"]))
+    blocking = [g for g in result["gaps"] if g["severity"] in BLOCKING]
+    if blocking:
+        parts.append("%d blocking gaps" % len(blocking))
+    if result["undefined"]:
+        parts.append("%d undefined probes" % len(result["undefined"]))
+    if result["contradictions"]:
+        parts.append("%d contradictions" % len(result["contradictions"]))
+    return "; ".join(parts) or "did not pass"

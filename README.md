@@ -1,27 +1,32 @@
 # ecc-arena
 
-A [Claude Code](https://claude.com/claude-code) skill that makes many versions of a whole **project** compete, then assembles the best body from all of them.
+A [Claude Code](https://claude.com/claude-code) skill that makes many versions of a whole **project** compete, finds what the winner is missing, and fills it from the others.
 
-The bracket arena (`/arena`) makes a hundred answers fight pairwise and throws away the loser's good ideas. It is expensive and it is built for answers, not projects. This skill is built for projects:
+The bracket arena (`/arena`) makes answers fight pairwise and throws away the loser's good ideas. It is expensive and it is built for answers. ECC Arena is built for projects, and it runs on [Everything-Claude-Code](https://github.com/affaan-m/everything-claude-code): every competitor and every judge works with the ECC agents and skills, which are vendored in this repo under `ecc/`.
 
-1. **Blueprint.** Every competitor is a different [Everything-Claude-Code](https://github.com/affaan-m/everything-claude-code) agent chain with its own reasoning mode, strategy and an *emphasis* it obsesses over: legal, money and spend limits, voting and governance, identity, data, edge cases, security, operations, logistics, user experience, quality, delivery. Each writes a complete project blueprint.
-2. **Audit.** One judge per group of ten scores every blueprint on sixteen lenses, A to Z (`lenses.md`), and names the best part in its group for every lens.
-3. **Verdict.** The chief judge picks the winner, then orders transplants: the parts of other blueprints that beat the winner's on a lens. It also lists every gap no blueprint closed.
-4. **Surgery.** A surgeon assembles one body: the winner, with every transplant rewritten to fit and every gap filled or marked `DECISION NEEDED`.
-5. **Verify.** A hostile verifier audits the merged blueprint lens by lens. If it fails, the surgeon goes back in with the list. Two passes by default.
-6. **Build** (optional, `--build`). A few builders build the merged blueprint, a build judge runs every build's install and tests, picks the winner and orders file-level transplants, and a build surgeon assembles the merged project and makes its tests pass.
+## How it works
 
-Claude orchestrates. It never competes, judges, merges or builds.
+1. **Compete.** Every competitor is dealt a card: an ECC chain (which ECC agents it works as and which ECC skills it applies, in order), a reasoning mode and a strategy. Each one prepares the **whole project** as a build-ready package: a completeness matrix, PRD, architecture, policies, tasks, tests, ops, CLAUDE.md and README. Not code: the set of files from which Claude Code can build the project in a fresh folder without guessing.
+2. **Audit.** One judge per group of ten builds the **union completeness matrix**: every entity x action row and every question any competitor thought of, plus the rows the task implies. For every package it lists the empty cells as gaps, with evidence ("7 of 10 packages define this"), probes it with scenarios traced through its own rules ("a non-member votes": blocked, allowed or undefined), and scores five criteria.
+3. **Verdict.** The chief judge merges the unions, picks the winner, and walks the union cell by cell against it. Every empty cell in the winner becomes either a **transplant** from a package that filled it or an **open gap** nobody filled. Nothing is transplanted because it is "better". Something is transplanted because it is missing.
+4. **Surgery.** A surgeon assembles the final package: the winner, with every transplant rewritten to fit and every open gap filled with a concrete default or marked `DECISION NEEDED` for you.
+5. **Verify.** A verifier rebuilds the matrix from the task without looking at the package's, checks every claimed cell at the place the package names, probes, and scores. On failure the surgeon gets the list and one more pass.
+6. **Deliver.** The deliverer writes the project folder to continue in Claude Code (with the exact first message to give it), a business plan and a pitch deck, all from the verified package.
+
+Claude orchestrates. It never competes, judges, merges, verifies or delivers.
+
+## How the judge finds what is missing
+
+The method is in [`matrix.md`](skills/ecc-arena/matrix.md). Rows come from the task's nouns and verbs (member, shared wallet, proposal, vote; join, spend, propose, vote, leave). Columns come from the sixteen lenses in [`lenses.md`](skills/ecc-arena/lenses.md) applied to each row (who, when, limit, at-limit, twice, undo, fail, abuse, money, law, see). "Shared wallet x spend" has a "limit" cell whether or not anyone wrote one. "Proposal x vote" has a "who" cell. An empty cell is a gap, and a cell filled by most competitors and empty in one is a gap with evidence.
 
 ## Cost
 
-| run | competitors | sub-agent calls | the bracket arena, same N |
-|---|---|---|---|
-| `--quick` | 12 | 17 to 19 | 67 |
-| default | 36 | 43 to 45 | 211 |
-| `--full` | 100 | 113 to 115 | 595 |
+| run | competitors | audit groups | sub-agent calls | bracket arena, same N |
+|---|---|---|---|---|
+| `--quick` (default) | 10 | 1 | 16 to 18 | 55 |
+| `--full` | 100 | 10 | 114 to 116 | 595 |
 
-`--build` adds the builders (default 3) plus two calls. Competitors, auditors and builders run on Sonnet; the chief judge, surgeon and verifier run on Opus. `--model` overrides all of them. `python3 engine.py plan` prints the numbers before anything is spent.
+Each competitor call prepares a whole package, so it is many times the size of a judge call. Competitors, auditors and the deliverer run on Sonnet; the chief judge, surgeon and verifier run on Opus. `--model` overrides all of them. `python3 engine.py plan` prints the numbers before anything is spent.
 
 ## Install
 
@@ -36,32 +41,19 @@ git clone https://github.com/SheikhSakhi/ecc-arena.git
 cd ecc-arena && sh install.sh
 ```
 
-Requirements: python3 (3.9 or newer), git. The ECC agents are optional: with [everything-claude-code](https://github.com/affaan-m/everything-claude-code) installed in `~/.claude/agents`, each competitor reads its chain's agent definitions and works in those roles; without them it works from the chain's description.
+Requirements: python3 (3.9 or newer), git. The installer puts the skill in `~/.claude/skills/ecc-arena` with the vendored ECC agents and skills beside it. ECC agents and skills already installed in `~/.claude` take precedence; the vendored copy is the fallback, so nothing of yours is overwritten.
 
 Restart Claude Code after installing.
 
 ## Use
 
 ```
-/ecc-arena a community bucket-list app with a shared wallet, spend limits and voting on what to do next
-/ecc-arena --quick <task>
-/ecc-arena --full --build --builders 3 <task>
+/ecc-arena ClawBucket: a community bucket-list app with a shared wallet, per-member spend limits and voting on what to do next
+/ecc-arena --full <project>
+/ecc-arena --agents 30 --seed 7 <project>
 ```
 
-| flag | meaning |
-|---|---|
-| `--agents N` | N competitors. Default 36, three per emphasis. |
-| `--quick` | 12 competitors, one per emphasis. |
-| `--full` | 100 competitors. |
-| `--build` | Build the merged blueprint with `--builders B` builders (default 3) and merge the best build. |
-| `--seed S` | Fixes the cards and the groups. |
-| `--model M` | One model for every role. |
-
-Everything a run writes lives in `.ecc-arena/<run>/` in the directory you ran it from: every blueprint, every audit, the verdict, the merged blueprint and surgery log per pass, the verification per pass, and the builds. Add `.ecc-arena/` to your `.gitignore`.
-
-## What the judge checks
-
-`lenses.md` is the A-to-Z list: purpose and scope, legal and compliance, money and limits and fraud, governance and voting and disputes, identity and permissions, data lifecycle, core logic and edge cases, security and abuse, reliability and operations, logistics and the real world, integrations, user experience and communication, performance and running cost, testing, delivery and risk, documentation and handover. Every lens has the probing questions and what a gap looks like: a rule without a number, a flow without an owner, a state with no way out.
+Everything a run writes lives in `.ecc-arena/<run>/` in the directory you ran it from: every package, every audit, the verdict with the global union, the final package and surgery log per pass, the verification per pass, and `deliverable/` with the project folder, `BUSINESS-PLAN.md` and `PITCH-DECK.md`. Add `.ecc-arena/` to your `.gitignore`.
 
 ## Layout
 
@@ -70,14 +62,16 @@ skills/ecc-arena/
   SKILL.md         what Claude does as the orchestrator
   engine.py        the command line: plan, init, next, prompts, check, status, winner, card
   ecca/            state, dealing, jobs, prompts, scoring, plan
-  deck.json        the cards: ECC chains, reasoning modes, strategies, emphases, per-role models
-  lenses.json      lens ids and weights
-  lenses.md        the A-to-Z audit the judges read
-  rubric.md        how scores, ranking, transplants and verification work
+  deck.json        the cards: ECC chains (agents + skills), reasoning modes, strategies, per-role models
+  matrix.md        how the completeness matrix is built and used
+  lenses.md        the sixteen lenses, the question generator
+  rubric.md        scoring, ranking, transplants, verification
+  criteria.json    the five criteria and their weights
   prompts/         one brief template per role
-  tests/           unittest suite: python3 -m unittest discover -s skills/ecc-arena/tests
+  tests/           python3 -m unittest discover -s skills/ecc-arena/tests
+ecc/               vendored Everything-Claude-Code agents, skills, rules and commands (MIT)
 ```
 
 ## License
 
-MIT.
+MIT. The vendored `ecc/` folder is from [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code), also MIT; see `ecc/LICENSE` and `ecc/VENDORED.md`.
