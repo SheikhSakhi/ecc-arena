@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "about": "Every competitor is dealt one card: an ECC agent chain (which Everything-Claude-Code agents it works as, in order), a reasoning mode, a strategy, and an emphasis lens it obsesses over. Emphasis and chain are dealt round-robin so that with 12 or more competitors every emphasis is covered at least once. No two competitors get the same card.",
+  "models": {
+    "blueprint": "sonnet",
+    "audit": "sonnet",
+    "verdict": "opus",
+    "surgery": "opus",
+    "verify": "opus",
+    "build": "sonnet",
+    "build_judge": "opus",
+    "build_surgery": "opus"
+  },
+  "chains": [
+    {"id": "planner-architect-tdd", "name": "Planner, architect, TDD guide, code reviewer", "agents": ["planner", "architect", "tdd-guide", "code-reviewer"], "how": "Plan the phases first, design the system second, define the tests third, then review the whole as a hostile reviewer would."},
+    {"id": "architect-security", "name": "Architect, security reviewer, database reviewer", "agents": ["architect", "security-reviewer", "database-reviewer"], "how": "Design from the threat model and the data model outward. Every component must say how it fails safely and what it stores."},
+    {"id": "product-first", "name": "GAN planner, marketing agent, a11y architect", "agents": ["gan-planner", "marketing-agent", "a11y-architect"], "how": "Write the product spec as if for a launch: audience, features, sprints, acceptance criteria, how it is sold, who it excludes."},
+    {"id": "ops-first", "name": "Loop operator, performance optimizer, doc updater", "agents": ["loop-operator", "performance-optimizer", "doc-updater"], "how": "Start from day-two operations: deploys, monitoring, cost, runbooks, documentation. Design the product so it can be run by someone who did not build it."},
+    {"id": "spec-miner-tdd", "name": "Spec miner, TDD guide, PR test analyzer", "agents": ["spec-miner", "tdd-guide", "pr-test-analyzer"], "how": "Write the requirements as testable specs with invariants first. Every feature gets its acceptance test before its design."},
+    {"id": "code-architect-explorer", "name": "Code explorer, code architect, refactor cleaner", "agents": ["code-explorer", "code-architect", "refactor-cleaner"], "how": "Map what exists or what the closest existing systems do, then produce an implementation blueprint with concrete files, interfaces and build order, and cut everything not needed."},
+    {"id": "security-silent-failure", "name": "Security reviewer, silent failure hunter, type design analyzer", "agents": ["security-reviewer", "silent-failure-hunter", "type-design-analyzer"], "how": "Assume every input is hostile and every dependency will fail. Design the types so illegal states cannot be represented, and make every failure loud."},
+    {"id": "full-stack-reviewers", "name": "TypeScript reviewer, React reviewer, database reviewer, e2e runner", "agents": ["typescript-reviewer", "react-reviewer", "database-reviewer", "e2e-runner"], "how": "Design the web product through the eyes of the four reviewers who will tear it apart: the frontend, the backend types, the queries and the end-to-end flows."},
+    {"id": "python-backend", "name": "Planner, Python reviewer, FastAPI reviewer, database reviewer", "agents": ["planner", "python-reviewer", "fastapi-reviewer", "database-reviewer"], "how": "Design a Python service: API contracts, schemas, async boundaries and the database behind them, with the review rules of each reviewer applied up front."},
+    {"id": "go-rust-systems", "name": "Architect, Go reviewer, Rust reviewer", "agents": ["architect", "go-reviewer", "rust-reviewer"], "how": "Design as a systems engineer: explicit concurrency, ownership of every resource, explicit error paths, no hidden allocation of trust."},
+    {"id": "mobile-first", "name": "Swift reviewer, Kotlin reviewer, Flutter reviewer, a11y architect", "agents": ["swift-reviewer", "kotlin-reviewer", "flutter-reviewer", "a11y-architect"], "how": "Design for a phone in a pocket first: offline, interrupted, one-handed, notifications, app store rules. The web is the second client."},
+    {"id": "ml-data", "name": "MLE reviewer, RAG pipeline reviewer, database reviewer", "agents": ["mle-reviewer", "rag-pipeline-reviewer", "database-reviewer"], "how": "Treat every decision the product makes as a model with inputs, evaluation and drift. Specify data contracts, evaluation and rollback for each."},
+    {"id": "open-source", "name": "Opensource forker, sanitizer, packager", "agents": ["opensource-forker", "opensource-sanitizer", "opensource-packager"], "how": "Design it as something strangers will run and contribute to: licenses, secrets hygiene, setup in one command, contribution rules, no internal references."},
+    {"id": "harness-evaluator", "name": "Harness optimizer, agent evaluator, GAN evaluator", "agents": ["harness-optimizer", "agent-evaluator", "gan-evaluator"], "how": "Write the evaluation before the product: what will be measured, how pass and fail are decided, and how the system proves it works every release."}
+  ],
+  "reasoning": [
+    {"id": "first-principles", "name": "First principles", "how": "Reduce the task to facts nobody can dispute, then rebuild from those. Keep a convention only when it earns its place again."},
+    {"id": "pre-mortem", "name": "Pre-mortem", "how": "Assume the project shipped and failed badly a year later. Write the post-mortem, then design so that each cause cannot happen."},
+    {"id": "inversion", "name": "Inversion", "how": "List every way to guarantee the project fails, then design the opposite of each item."},
+    {"id": "analogy", "name": "Analogy to proven systems", "how": "Find the three closest systems that already work in the world and borrow their hard-won rules, saying which rule came from where."},
+    {"id": "adversary", "name": "Adversarial", "how": "Play the fraudster, the lawyer, the angry customer, the tired operator and the bored moderator in turn, and design against each."},
+    {"id": "constraints-first", "name": "Constraints first", "how": "Write every hard constraint (law, money, time, platform, physics) before any feature. Features must fit inside the constraints, never the reverse."},
+    {"id": "user-journey", "name": "User journey", "how": "Walk one real person through the product minute by minute from first contact to leaving, and design whatever that walk needs."},
+    {"id": "state-machine", "name": "State machines", "how": "Model every important thing as explicit states and transitions, name the illegal transitions, and design around them."},
+    {"id": "money-flow", "name": "Follow the money", "how": "Trace every unit of value from where it enters to where it leaves, including fees, refunds, limits, taxes and who is liable at each step."},
+    {"id": "decision-ledger", "name": "Decision ledger", "how": "For every decision write the options, the one chosen and why, so a reader can disagree with a specific line rather than the whole."},
+    {"id": "minimal-viable", "name": "Minimum then expand", "how": "Define the smallest version that is complete, legal and safe, then list what the next three versions add and why."},
+    {"id": "reference-class", "name": "Reference class forecasting", "how": "Estimate cost, time and risk from what comparable projects actually took, and say which comparables you used."}
+  ],
+  "strategies": [
+    {"id": "simplest", "name": "Simplest thing that works", "how": "Choose the least complicated design that fully does the job. Every extra part must justify itself."},
+    {"id": "boring-tech", "name": "Boring technology", "how": "Pick managed, mainstream, well-documented pieces. Novelty only where the product is the novelty."},
+    {"id": "safety-first", "name": "Safety first", "how": "When a trade-off touches money, law, data or users' trust, pick the safer side every time and say what it costs."},
+    {"id": "speed-to-launch", "name": "Fastest credible launch", "how": "Optimize for a real launch soon. Cut scope aggressively, but never cut what makes it legal or safe."},
+    {"id": "scale-ready", "name": "Ready for ten times the load", "how": "Design so the first version survives a ten-times spike without a rewrite, and say exactly where it would break at a hundred times."},
+    {"id": "operator-friendly", "name": "Operator friendly", "how": "Prefer designs that a small team can run, debug and explain at three in the morning."},
+    {"id": "explicit-policies", "name": "Every rule written down", "how": "Every limit, threshold, fee, timeout and eligibility rule gets a number, an owner and a reason. Nothing is left as 'configurable later'."},
+    {"id": "defensive", "name": "Defensive by default", "how": "Assume abuse, outages and mistakes. Every feature says how it is limited, monitored and reversed."},
+    {"id": "user-trust", "name": "Earn trust visibly", "how": "Make every rule that affects the user visible to them before it applies, and make every outcome explainable after."},
+    {"id": "composable", "name": "Composable modules", "how": "Split the system into modules with explicit contracts so any one can be replaced without touching the rest."},
+    {"id": "data-driven", "name": "Measure everything that matters", "how": "Every feature ships with its metric, its alert and the decision that metric will drive."},
+    {"id": "regulated-grade", "name": "Regulated grade", "how": "Design as if an auditor will read it: audit trails, retention, separation of duties, documented controls."}
+  ],
+  "emphasis": [
+    {"id": "legal", "name": "Legal and compliance", "lenses": ["B"], "how": "Obsess over jurisdiction, licenses, terms, privacy, consumer and financial regulation, and what gets the project shut down."},
+    {"id": "money", "name": "Money, limits and fraud", "lenses": ["C"], "how": "Obsess over every amount: pricing, spend limits, caps, quotas, fees, refunds, reconciliation, fraud and chargebacks. Every limit needs a number."},
+    {"id": "governance", "name": "Rules, voting and disputes", "lenses": ["D"], "how": "Obsess over how decisions are made inside the product: voting mechanics, eligibility, weighting, ties, changing votes, sybil resistance, disputes and appeals."},
+    {"id": "identity", "name": "Identity, roles and permissions", "lenses": ["E"], "how": "Obsess over who can do what, how they prove who they are, how access is revoked, and how every privileged action is logged."},
+    {"id": "data", "name": "Data model and lifecycle", "lenses": ["F"], "how": "Obsess over the data: model, ownership, retention, deletion, export, backups, migrations and personal data."},
+    {"id": "edge-cases", "name": "Core logic and edge cases", "lenses": ["G"], "how": "Obsess over states, transitions, concurrency, time zones, idempotency, limits, empty states and the inputs nobody expects."},
+    {"id": "security", "name": "Security and abuse", "lenses": ["H"], "how": "Obsess over the threat model, abuse vectors, rate limits, secrets, injection, bots and reporting."},
+    {"id": "operations", "name": "Reliability and operations", "lenses": ["I", "M"], "how": "Obsess over failure modes, monitoring, deploys, rollback, incidents, runbooks, performance and the cost of running it."},
+    {"id": "logistics", "name": "Logistics and the real world", "lenses": ["J", "K"], "how": "Obsess over everything outside the software: physical flows, scheduling, third parties, vendors, SLAs, geography, support and what happens when a dependency is down."},
+    {"id": "experience", "name": "User experience and communication", "lenses": ["L"], "how": "Obsess over the flows, notifications, error messages, onboarding, mobile, offline, accessibility and every word the user reads."},
+    {"id": "quality", "name": "Testing and quality", "lenses": ["N", "P"], "how": "Obsess over acceptance criteria, the test plan, fixtures, how quality is proven every release, and the documentation that lets someone else take over."},
+    {"id": "delivery", "name": "Delivery, scope and risk", "lenses": ["A", "O"], "how": "Obsess over purpose, non-goals, phases, milestones, team, timeline, cost, risks and open questions. Say what is version one and what is not."}
+  ]
+}
